@@ -35,10 +35,6 @@ Parameters:
     Type: String
     Description: ARN of the CodeStar connection
 
-  EcrRepositoryUrl:
-    Type: String
-    Description: URL of the ECR repository
-
   EcsContainerName:
     Type: String
     Description: Name of the ECS container
@@ -116,7 +112,7 @@ Resources:
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: REPOSITORY_URI
-            Value: !Ref ECRRepository.Url
+            Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-repository"
           - Name: AWS_DEFAULT_REGION
             Value: !Ref AWS::Region
           - Name: AWS_ACCOUNT_ID
