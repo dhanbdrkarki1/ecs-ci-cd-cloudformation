@@ -23,6 +23,7 @@ Resources:
       ClusterName: !Sub ${ProjectName}-cluster
       CapacityProviders:
         - FARGATE
+        - FARGATE_SPOT
       DefaultCapacityProviderStrategy:
         - CapacityProvider: FARGATE
           Weight: 1
@@ -154,13 +155,31 @@ Resources:
 
   ECSService:
     Type: AWS::ECS::Service
-    DependsOn: ALBListener
+    DependsOn: 
+      - ALBListener
+      - TaskDefinition
     Properties:
       ServiceName: !Sub ${ProjectName}-service
       Cluster: !Ref ECSCluster
       TaskDefinition: !Ref ECSTaskDefinition
       DesiredCount: 2
       LaunchType: FARGATE
+      DeploymentConfiguration:
+        # run up to twice the desired number of tasks during the deployment process.
+        # prevent downtime, as ECS can start new tasks before stopping the old 
+        MaximumPercent: 200
+        # ensures no tasks are stopped until new ones are healthy, guaranteeing zero downtime for the service.
+        MinimumHealthyPercent: 100
+        DeploymentCircuitBreaker:
+          Enable: true # Enables the deployment circuit breaker feature, which monitors deployments for failures
+          Rollback: true # Automatically rolls back to the last stable deployment if the new deployment fails 
+      # provides shell access to your running tasks
+      EnableExecuteCommand: true
+      # Automatically adds ECS-managed tags to the tasks created by this service
+      EnableECSManagedTags: true
+      # Ensures that the tags applied to the ECS service are propagated to the tasks created by the service
+      PropagateTags: SERVICE
+
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -171,7 +190,7 @@ Resources:
             - !Ref PublicSubnet2
       LoadBalancers:
         - ContainerName: !Sub ${ProjectName}
-          ContainerPort: 3000
+          ContainerPort: !Ref ContainerPort
           TargetGroupArn: !Ref ALBTargetGroup
 
   ECSTaskDefinition:
