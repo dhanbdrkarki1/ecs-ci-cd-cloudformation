@@ -1,0 +1,43 @@
+[
+    {
+        "ParameterKey": "Environment",
+        "ParameterValue": "dev"
+    },
+    {
+        "ParameterKey": "ProjectName",
+        "ParameterValue": "ecs-demo-app"
+    },
+    {
+        "ParameterKey": "EcsClusterName",
+        "ParameterValue": "ecs-demo-app-cluster"
+    },
+    {
+        "ParameterKey": "EcsServiceName",
+        "ParameterValue": "ecs-demo-app-service"
+    },
+    {
+        "ParameterKey": "GitHubRepoId",
+        "ParameterValue": "dhanbdrkarki1/codepipeline-todo"
+    },
+    {
+        "ParameterKey": "GitHubBranch",
+        "ParameterValue": "main"
+    },
+    {
+        "ParameterKey": "CodeStarConnectionName",
+        "ParameterValue": "dhan-node-app"
+    },
+    {
+        "ParameterKey": "CodeStarConnectionArn",
+        "ParameterValue": "arn:aws:codeconnections:us-east-1:818210291631:connection/3c8faf24-a33f-4b6a-9708-8d95b6c4ead6"
+    },
+    {
+        "ParameterKey": "EcrRepositoryUrl",
+        "ParameterValue": "818210291631.dkr.ecr.us-east-1.amazonaws.com/ecs-demo-app"
+    },
+    {
+        "ParameterKey": "EcsContainerName",
+        "ParameterValue": "ecs-demo-app"
+    }
+]
+
