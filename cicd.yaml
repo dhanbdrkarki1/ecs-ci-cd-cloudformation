@@ -55,6 +55,21 @@ Resources:
         - Key: Project
           Value: !Ref ProjectName
 
+# CloudFormation Service Role
+  CloudFormationServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+  # CodeBuild Service Role
   CodeBuildServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -72,32 +87,35 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
+                  - 'logs:*'
+                  - 'ecr:*'
+                  - 's3:*'
+                  - 'ecs:*'
+                  - 'cloudformation:*'
+                  - 'iam:*'
                 Resource: '*'
-              - Effect: Allow
-                Action:
-                  - ecr:BatchCheckLayerAvailability
-                  - ecr:CompleteLayerUpload
-                  - ecr:GetAuthorizationToken
-                  - ecr:InitiateLayerUpload
-                  - ecr:PutImage
-                  - ecr:UploadLayerPart
-                  - ecr:BatchGetImage
-                  - ecr:GetDownloadUrlForLayer
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:GetObjectVersion
-                  - s3:PutObject
-                  - s3:ListBucket
-                Resource:
-                  - !Sub ${ArtifactBucket.Arn}
-                  - !Sub ${ArtifactBucket.Arn}/*
 
-  CodeBuildProject:
+  # Infrastructure Build Project
+  InfraBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ${ProjectName}-infra-build
+      ServiceRole: !GetAtt CodeBuildServiceRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        EnvironmentVariables:
+          - Name: ENV
+            Value: !Ref Environment
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infra-buildspec.yml
+
+  # Application Build Project
+  AppBuildProject:
     Type: AWS::CodeBuild::Project
     DependsOn: ECRRepository
     Properties:
@@ -131,6 +149,7 @@ Resources:
           GroupName: !Sub /aws/codebuild/${ProjectName}
           StreamName: build-log
 
+# CodePipeline Service Role
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -148,35 +167,12 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - s3:GetObject
-                  - s3:GetObjectVersion
-                  - s3:GetBucketVersioning
-                  - s3:PutObject
-                  - s3:PutObjectAcl
-                  - s3:ListBucket
-                Resource:
-                  - !Sub ${ArtifactBucket.Arn}
-                  - !Sub ${ArtifactBucket.Arn}/*
-              - Effect: Allow
-                Action:
-                  - codestar-connections:UseConnection
-                Resource: !Ref CodeStarConnectionArn
-              - Effect: Allow
-                Action:
-                  - codebuild:BatchGetBuilds
-                  - codebuild:StartBuild
-                Resource: !GetAtt CodeBuildProject.Arn
-              - Effect: Allow
-                Action:
-                  - ecs:DescribeServices
-                  - ecs:DescribeTaskDefinition
-                  - ecs:DescribeTasks
-                  - ecs:ListTasks
-                  - ecs:RegisterTaskDefinition
-                  - ecs:UpdateService
-                  - iam:PassRole
+                  - 's3:*'
+                  - 'cloudformation:*'
+                  - 'codebuild:*'
+                  - 'codestar-connections:UseConnection'
+                  - 'iam:PassRole'
                 Resource: '*'
-
 
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -199,20 +195,58 @@ Resources:
                 ConnectionArn: !Sub ${CodeStarConnectionArn}
                 FullRepositoryId: !Ref GitHubRepoId
                 BranchName: !Ref GitHubBranch
+                OutputArtifactFormat: 'CODE_ZIP'
               OutputArtifacts:
                 - Name: SourceOutput
               RunOrder: 1
 
-        - Name: Build
+        - Name: InfrastructureDeploy
           Actions:
-            - Name: Build
+            - Name: BuildInfra
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref CodeBuildProject
+                ProjectName: !Ref InfraBuildProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: InfraBuildOutput
+              RunOrder: 1
+
+            - Name: DeployInfra
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: '1'
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                RoleArn: !GetAtt CloudFormationServiceRole.Arn
+                StackName: !Sub ${ProjectName}-infra
+                TemplatePath: InfraBuildOutput::ecs-cluster.yaml
+                ParameterOverrides: !Sub |
+                  {
+                    "Environment": "${Environment}",
+                    "ProjectName": "${ProjectName}"
+                  }
+                Capabilities: CAPABILITY_NAMED_IAM
+              InputArtifacts:
+                - Name: InfraBuildOutput
+              RunOrder: 2
+
+        - Name: Build
+          Actions:
+            - Name: BuildApp
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref AppBuildProject
               InputArtifacts:
                 - Name: SourceOutput
               OutputArtifacts:
@@ -228,8 +262,9 @@ Resources:
                 Provider: ECS
                 Version: '1'
               Configuration:
-                ClusterName: !Ref EcsClusterName
-                ServiceName: !Ref EcsServiceName
+                ClusterName: !Sub ${ProjectName}-cluster
+                ServiceName: !Sub ${ProjectName}-service
+                FileName: imagedefinitions.json
               InputArtifacts:
                 - Name: BuildOutput
               RunOrder: 1
@@ -274,14 +309,6 @@ Resources:
               - !Sub ${ArtifactBucket.Arn}/*
 
 Outputs:
-  PipelineName:
-    Description: Name of the created pipeline
-    Value: !Ref Pipeline
-
-  CodeBuildProjectName:
-    Description: Name of the CodeBuild project
-    Value: !Ref CodeBuildProject
-
-  ArtifactBucketName:
-    Description: Name of the artifact bucket
-    Value: !Ref ArtifactBucket
+  PipelineURL:
+    Description: CodePipeline URL
+    Value: !Sub https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${ProjectName}-pipeline
