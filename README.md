@@ -105,7 +105,7 @@ aws cloudformation create-stack   --stack-name ecs-demo-cicd   --template-body f
 
 aws cloudformation delete-stack --stack-name ecs-demo-app-cluster
 
-
+aws cloudformation delete-stack --stack-name ecs-demo-app-cluster
 
 ## Local Testing
 1. Build the Docker image locally:
