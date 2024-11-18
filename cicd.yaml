@@ -231,6 +231,7 @@ Resources:
                 RoleArn: !GetAtt CloudFormationServiceRole.Arn
                 StackName: !Sub ${ProjectName}-infra
                 TemplatePath: InfraBuildOutput::ecs-cluster.yaml
+                DeploymentTimeout: 15
                 ParameterOverrides: !Sub |
                   {
                     "Environment": "${Environment}",

@@ -1,13 +1,29 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      python: 3.9
+  
+  pre_build:
+    commands:
+      - echo "Installing dependencies..."
+      - pip install cfn-lint
+  
   build:
     commands:
       - echo "Validating CloudFormation template..."
+      - cfn-lint ecs-cluster.yaml
       - aws cloudformation validate-template --template-body file://ecs-cluster.yaml
+      - echo "Template validation complete"
+
+  post_build:
+    commands:
+      - echo "Preparing artifacts..."
+      - cp ecs-cluster.yaml .
+      - echo "Build completed on $(date)"
 
 artifacts:
   files:
     - ecs-cluster.yaml
-    - params.json
   discard-paths: no
