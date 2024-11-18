@@ -34,6 +34,10 @@
     {
         "ParameterKey": "EcsContainerName",
         "ParameterValue": "ecs-demo-app"
+    },
+    {
+        "ParameterKey": "ContainerPort",
+        "ParameterValue": "3000"
     }
 ]
 

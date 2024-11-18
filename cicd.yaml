@@ -15,6 +15,10 @@ Parameters:
     Type: String
     Description: Name of the ECS cluster
 
+  ContainerPort:
+    Type: Number
+    Description: Container port
+
   EcsServiceName:
     Type: String
     Description: Name of the ECS service
@@ -230,7 +234,8 @@ Resources:
                 ParameterOverrides: !Sub |
                   {
                     "Environment": "${Environment}",
-                    "ProjectName": "${ProjectName}"
+                    "ProjectName": "${ProjectName}",
+                    "ContainerPort": "${ContainerPort}"
                   }
                 Capabilities: CAPABILITY_NAMED_IAM
               InputArtifacts:
