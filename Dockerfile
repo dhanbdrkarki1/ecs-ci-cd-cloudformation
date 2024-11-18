@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM public.ecr.aws/docker/library/node:20.18.0-alpine3.19
 
 WORKDIR /usr/src/app
 
