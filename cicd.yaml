@@ -99,6 +99,7 @@ Resources:
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
+    DependsOn: ECRRepository
     Properties:
       Name: !Sub ${ProjectName}-build
       Description: Build project for container image

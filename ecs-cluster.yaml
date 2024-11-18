@@ -4,13 +4,40 @@ Description: 'CloudFormation template for ECS Cluster and related resources'
 Parameters:
   Environment:
     Type: String
-    Default: dev
     Description: Environment name
+    Default: dev
 
   ProjectName:
     Type: String
-    Default: ecs-demo-app
-    Description: Project name
+    Description: Name of the project
+
+  EcsClusterName:
+    Type: String
+    Description: Name of the ECS cluster
+
+  EcsServiceName:
+    Type: String
+    Description: Name of the ECS service
+
+  GitHubRepoId:
+    Type: String
+    Description: GitHub repository ID
+
+  GitHubBranch:
+    Type: String
+    Description: GitHub repository branch
+
+  CodeStarConnectionName:
+    Type: String
+    Description: Name of the CodeStar connection
+
+  CodeStarConnectionArn:
+    Type: String
+    Description: ARN of the CodeStar connection
+
+  EcsContainerName:
+    Type: String
+    Description: Name of the ECS container
 
 Resources:
   ECSCluster:

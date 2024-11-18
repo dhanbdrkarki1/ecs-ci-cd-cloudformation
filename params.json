@@ -32,10 +32,6 @@
         "ParameterValue": "arn:aws:codeconnections:us-east-1:818210291631:connection/c5eac169-0189-4f8e-a660-0c480928bf2d"
     },
     {
-        "ParameterKey": "EcrRepositoryUrl",
-        "ParameterValue": "818210291631.dkr.ecr.us-east-1.amazonaws.com/ecs-demo-app"
-    },
-    {
         "ParameterKey": "EcsContainerName",
         "ParameterValue": "ecs-demo-app"
     }
