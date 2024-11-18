@@ -17,7 +17,7 @@
     },
     {
         "ParameterKey": "GitHubRepoId",
-        "ParameterValue": "dhanbdrkarki1/codepipeline-todo"
+        "ParameterValue": "dhanbdrkarki1/ecs-ci-cd-cloudformation"
     },
     {
         "ParameterKey": "GitHubBranch",
@@ -25,11 +25,11 @@
     },
     {
         "ParameterKey": "CodeStarConnectionName",
-        "ParameterValue": "dhan-node-app"
+        "ParameterValue": "dhan-ecs-ci-cd-cloudformation"
     },
     {
         "ParameterKey": "CodeStarConnectionArn",
-        "ParameterValue": "arn:aws:codeconnections:us-east-1:818210291631:connection/3c8faf24-a33f-4b6a-9708-8d95b6c4ead6"
+        "ParameterValue": "arn:aws:codeconnections:us-east-1:818210291631:connection/c5eac169-0189-4f8e-a660-0c480928bf2d"
     },
     {
         "ParameterKey": "EcrRepositoryUrl",
