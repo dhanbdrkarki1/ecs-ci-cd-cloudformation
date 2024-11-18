@@ -11,33 +11,10 @@ Parameters:
     Type: String
     Description: Name of the project
 
-  EcsClusterName:
-    Type: String
-    Description: Name of the ECS cluster
-
-  EcsServiceName:
-    Type: String
-    Description: Name of the ECS service
-
-  GitHubRepoId:
-    Type: String
-    Description: GitHub repository ID
-
-  GitHubBranch:
-    Type: String
-    Description: GitHub repository branch
-
-  CodeStarConnectionName:
-    Type: String
-    Description: Name of the CodeStar connection
-
-  CodeStarConnectionArn:
-    Type: String
-    Description: ARN of the CodeStar connection
-
-  EcsContainerName:
-    Type: String
-    Description: Name of the ECS container
+  ContainerPort:
+    Type: Number
+    Description: Container port
+    Default: 3000
 
 Resources:
   ECSCluster:
@@ -137,8 +114,8 @@ Resources:
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 3000
-          ToPort: 3000
+          FromPort: !Ref ContainerPort
+          ToPort: !Ref ContainerPort
           SourceSecurityGroupId: !Ref ALBSecurityGroup
 
   ApplicationLoadBalancer:
@@ -211,7 +188,7 @@ Resources:
         - Name: !Sub ${ProjectName}
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}:latest
           PortMappings:
-            - ContainerPort: 3000
+            - ContainerPort: !Ref ContainerPort
           LogConfiguration:
             LogDriver: awslogs
             Options:
