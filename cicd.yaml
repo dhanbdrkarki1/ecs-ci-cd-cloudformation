@@ -69,8 +69,6 @@ Resources:
             Principal:
               Service: codebuild.amazonaws.com
             Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
       Policies:
         - PolicyName: CodeBuildServiceRolePolicy
           PolicyDocument:
@@ -84,23 +82,14 @@ Resources:
                 Resource: '*'
               - Effect: Allow
                 Action:
-                  - ecr:GetAuthorizationToken
                   - ecr:BatchCheckLayerAvailability
-                  - ecr:GetDownloadUrlForLayer
-                  - ecr:GetRepositoryPolicy
-                  - ecr:DescribeRepositories
-                  - ecr:ListImages
-                  - ecr:DescribeImages
-                  - ecr:BatchGetImage
-                  - ecr:InitiateLayerUpload
-                  - ecr:UploadLayerPart
                   - ecr:CompleteLayerUpload
-                  - ecr:PutImage
-                Resource: 
-                  - !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-repository
-              - Effect: Allow
-                Action:
                   - ecr:GetAuthorizationToken
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
                 Resource: '*'
               - Effect: Allow
                 Action:
@@ -111,6 +100,7 @@ Resources:
                 Resource:
                   - !Sub ${ArtifactBucket.Arn}
                   - !Sub ${ArtifactBucket.Arn}/*
+
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
@@ -126,7 +116,7 @@ Resources:
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: REPOSITORY_URI
-            Value: !Ref EcrRepositoryUrl
+            Value: !Ref ECRRepository.Url
           - Name: AWS_DEFAULT_REGION
             Value: !Ref AWS::Region
           - Name: AWS_ACCOUNT_ID
