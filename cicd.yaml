@@ -31,6 +31,15 @@ Parameters:
     Type: String
     Description: Name of the ECS container
 
+  RetentionPolicy:
+    Description: Define if you'd like the resource retained or deleted when the
+      CloudFormation stack is deleted.
+    Type: String
+    Default: Delete
+    AllowedValues:
+      - Delete
+      - Retain
+
 Resources:
   ECRRepository:
     Type: AWS::ECR::Repository
@@ -38,6 +47,8 @@ Resources:
       RepositoryName: !Sub "${ProjectName}-repository"
       ImageScanningConfiguration:
         ScanOnPush: true
+      UpdateReplacePolicy: !Ref RetentionPolicy
+      DeletionPolicy: !Ref RetentionPolicy
       EncryptionConfiguration:
         EncryptionType: AES256
       ImageTagMutability: MUTABLE
