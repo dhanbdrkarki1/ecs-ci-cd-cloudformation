@@ -100,7 +100,7 @@ Resources:
                 Resource: '*'
 
   # Infrastructure Build Project
-  InfraBuildProject:
+  InfraTemplateValidationProject:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Sub ${ProjectName}-infra-build
@@ -116,7 +116,7 @@ Resources:
             Value: !Ref Environment
       Source:
         Type: CODEPIPELINE
-        BuildSpec: infra-buildspec.yml
+        BuildSpec: infra-validation-buildspec.yml
 
   # Application Build Project
   AppBuildProject:
@@ -213,11 +213,11 @@ Resources:
                 Provider: CodeBuild
                 Version: '1'
               Configuration:
-                ProjectName: !Ref InfraBuildProject
+                ProjectName: !Ref InfraTemplateValidationProject
               InputArtifacts:
                 - Name: SourceOutput
               OutputArtifacts:
-                - Name: InfraBuildOutput
+                - Name: InfraTemplateValidationOutput
               RunOrder: 1
 
 
@@ -235,10 +235,6 @@ Resources:
                 - Name: BuildOutput
               RunOrder: 2
 
-        - Name: InfrastructureDeploy
-          Actions:
-
-
         - Name: Deploy
           Actions:
             - Name: DeployInfra
@@ -251,7 +247,7 @@ Resources:
                 ActionMode: CREATE_UPDATE
                 RoleArn: !GetAtt CloudFormationServiceRole.Arn
                 StackName: !Sub ${ProjectName}-infra
-                TemplatePath: InfraBuildOutput::ecs-cluster.yaml
+                TemplatePath: InfraTemplateValidationOutput::ecs-cluster.yaml
                 ParameterOverrides: !Sub |
                   {
                     "Environment": "${Environment}",
@@ -260,7 +256,7 @@ Resources:
                   }
                 Capabilities: CAPABILITY_NAMED_IAM
               InputArtifacts:
-                - Name: InfraBuildOutput
+                - Name: InfraTemplateValidationOutput
               RunOrder: 1
 
             - Name: DeployApplication
