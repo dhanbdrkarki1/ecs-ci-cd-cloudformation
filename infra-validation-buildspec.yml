@@ -21,5 +21,4 @@ artifacts:
   files:
     - infra.yaml
     - params.json
-    - '**/*'
   discard-paths: no
