@@ -13,12 +13,12 @@ phases:
   build:
     commands:
       - echo "Validating CloudFormation template..."
-      - cfn-lint ecs-cluster.yaml
-      - aws cloudformation validate-template --template-body file://ecs-cluster.yaml
+      - cfn-lint infra.yaml
+      - aws cloudformation validate-template --template-body file://infra.yaml
       - echo "Template validation complete on $(date)"
 
 artifacts:
   files:
-    - ecs-cluster.yaml
+    - infra.yaml
     - params.json
   discard-paths: no
