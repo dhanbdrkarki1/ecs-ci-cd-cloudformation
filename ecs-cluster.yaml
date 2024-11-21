@@ -157,7 +157,7 @@ Resources:
     Type: AWS::ECS::Service
     DependsOn: 
       - ALBListener
-      - TaskDefinition
+      - ECSTaskDefinition
     Properties:
       ServiceName: !Sub ${ProjectName}-service
       Cluster: !Ref ECSCluster
