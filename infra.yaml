@@ -391,19 +391,28 @@ Resources:
                   - ec2:DeleteNetworkInterface
                 Resource: '*'
 
-  ECSApplicationTaskRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: ECSApplicationTaskRole
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+ECSApplicationTaskRole:
+  Type: AWS::IAM::Role
+  Properties:
+    RoleName: ECSApplicationTaskRole
+    AssumeRolePolicyDocument:
+      Version: '2012-10-17'
+      Statement:
+        - Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+          Action: sts:AssumeRole
+    Policies:
+      - PolicyName: TaskPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:*
+              Resource: "*"
+    ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
 
   ECSCloudWatchLogGroup:
     Type: AWS::Logs::LogGroup
@@ -421,11 +430,9 @@ Resources:
         - FARGATE
       Cpu: '256'
       Memory: '512'
-      # remove later
-      ExecutionRoleArn: !Ref ECSExecutionRole
-      # ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn
+      ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn # Role used by ECS infrastructure
+      TaskRoleArn: !GetAtt ECSApplicationTaskRole.Arn # Role used by your application
 
-      TaskRoleArn: !Ref ECSApplicationTaskRole
       ContainerDefinitions:
         - Name: !Sub ${ProjectName}
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}:latest
