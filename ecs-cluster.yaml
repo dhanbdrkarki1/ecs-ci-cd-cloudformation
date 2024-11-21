@@ -20,7 +20,7 @@ Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Sub ${ProjectName}-cluster
+      ClusterName: !Sub "${ProjectName}-${Environment}-cluster"
       CapacityProviders:
         - FARGATE
         - FARGATE_SPOT
