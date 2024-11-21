@@ -93,6 +93,16 @@ aws cloudformation create-stack \
   --parameters file://params.json \
   --capabilities CAPABILITY_IAM
 
+To update an existing CloudFormation stack,
+```
+aws cloudformation update-stack \
+  --stack-name ecs-demo-cicd \
+  --template-body file://cicd.yaml \
+  --parameters file://params.json \
+  --capabilities CAPABILITY_IAM
+
+```
+
 # Monitor stack creation
 aws cloudformation describe-stacks \
   --stack-name ecs-demo-cicd \
@@ -103,7 +113,7 @@ aws cloudformation create-stack   --stack-name ecs-infra   --template-body file:
 
 aws cloudformation create-stack   --stack-name ecs-demo-cicd   --template-body file://cicd.yaml   --parameters file://params.json   --capabilities CAPABILITY_IAM
 
-aws cloudformation delete-stack --stack-name ecs-demo-app-cluster
+aws cloudformation delete-stack --stack-name ecs-demo-cicd
 
 aws cloudformation delete-stack --stack-name ecs-demo-app-cluster
 
