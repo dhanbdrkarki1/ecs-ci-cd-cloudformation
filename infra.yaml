@@ -80,14 +80,6 @@ Parameters:
     Description: The image tag to use when building and deploying your Docker image.
     Type: String
     Default: latest
-  RetentionPolicy:
-    Description: Define if you'd like the resource retained or deleted when the
-      CloudFormation stack is deleted.
-    Type: String
-    Default: Delete
-    AllowedValues:
-      - Delete
-      - Retain
 
 Resources:
   # VPC
@@ -557,14 +549,6 @@ Resources:
   #     MasterUserPassword: Password0
   #     MultiAZ: true
   #     PubliclyAccessible: false
-
-  # ECR Repository for storing Docker images
-  ECRRepository:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: !Sub "${ProjectName}-repository"
-      UpdateReplacePolicy: !Ref RetentionPolicy
-      DeletionPolicy: !Ref RetentionPolicy
 
 Outputs:
   ALBEndpoint:
