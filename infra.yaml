@@ -436,7 +436,7 @@ Resources:
 
       ContainerDefinitions:
         - Name: !Sub ${ProjectName}
-          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}:latest
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-repository:latest
           PortMappings:
             - ContainerPort: !Ref ContainerPort
           LogConfiguration:
