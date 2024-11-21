@@ -133,7 +133,7 @@ Resources:
             Value: !Ref AWS::Region
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
-          - Name: DockerFilePath
+          - Name: DOCKERFILE_PATH
             Value: !Ref DockerFilePath
           - Name: CONTAINER_NAME
             Value: !Ref EcsContainerName
