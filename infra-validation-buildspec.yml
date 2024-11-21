@@ -14,15 +14,11 @@ phases:
     commands:
       - echo "Validating CloudFormation template..."
       - cfn-lint ecs-cluster.yaml
-      # - aws cloudformation validate-template --template-body file://ecs-cluster.yaml --parameters file://params.json
-      - aws cloudformation validate-template --template-body file://ecs-cluster.yaml
+      - aws cloudformation validate-template --template-body file://ecs-cluster.yaml \
+          --parameters ParameterKey=Environment,ParameterValue=$Environment \
+                      ParameterKey=ProjectName,ParameterValue=$ProjectName \
+                      ParameterKey=ContainerPort,ParameterValue=$ContainerPort
       - echo "Template validation complete on $(date)"
-
-  # post_build:
-  #   commands:
-  #     - echo "Preparing artifacts..."
-  #     - cp ecs-cluster.yaml .
-  #     - echo "Build completed on $(date)"
 
 artifacts:
   files:
