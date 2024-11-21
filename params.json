@@ -24,6 +24,10 @@
         "ParameterValue": "ecs-demo-app"
     },
     {
+        "ParameterKey": "DockerFilePath",
+        "ParameterValue": "./Dockerfile"
+    },
+    {
         "ParameterKey": "ContainerPort",
         "ParameterValue": "3000"
     }
