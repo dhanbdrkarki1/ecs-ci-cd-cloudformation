@@ -17,8 +17,17 @@ phases:
       - aws cloudformation validate-template --template-body file://infra.yaml
       - echo "Template validation complete on $(date)"
 
+  post_build:
+    commands:
+      - echo "Listing files to be included in artifacts..."
+      - ls -la
+      - echo "Copying files to artifact directory..."
+      - cp infra.yaml ${CODEBUILD_SRC_DIR}/
+      - cp params.json ${CODEBUILD_SRC_DIR}/ || echo "params.json not found"
+
 artifacts:
   files:
     - infra.yaml
     - params.json
+    - '**/*'
   discard-paths: no
