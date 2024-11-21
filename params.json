@@ -8,24 +8,12 @@
         "ParameterValue": "ecs-demo-app"
     },
     {
-        "ParameterKey": "EcsClusterName",
-        "ParameterValue": "ecs-demo-app-cluster"
-    },
-    {
-        "ParameterKey": "EcsServiceName",
-        "ParameterValue": "ecs-demo-app-service"
-    },
-    {
         "ParameterKey": "GitHubRepoId",
         "ParameterValue": "dhanbdrkarki1/ecs-ci-cd-cloudformation"
     },
     {
         "ParameterKey": "GitHubBranch",
         "ParameterValue": "cicd"
-    },
-    {
-        "ParameterKey": "CodeStarConnectionName",
-        "ParameterValue": "dhan-ecs-ci-cd-cloudformation"
     },
     {
         "ParameterKey": "CodeStarConnectionArn",
