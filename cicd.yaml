@@ -11,9 +11,14 @@ Parameters:
     Type: String
     Description: Name of the project
 
+  DockerFilePath:
+    Description: Path to the Dockerfile in the code repo.
+    Type: String
+    Default: ./Dockerfile
+
   ContainerPort:
     Type: Number
-    Description: Container port
+    Description: Container port for the application
 
   GitHubRepoId:
     Type: String
@@ -31,15 +36,6 @@ Parameters:
     Type: String
     Description: Name of the ECS container
 
-  RetentionPolicy:
-    Description: Define if you'd like the resource retained or deleted when the
-      CloudFormation stack is deleted.
-    Type: String
-    Default: Delete
-    AllowedValues:
-      - Delete
-      - Retain
-
 Resources:
   ECRRepository:
     Type: AWS::ECR::Repository
@@ -47,8 +43,6 @@ Resources:
       RepositoryName: !Sub "${ProjectName}-repository"
       ImageScanningConfiguration:
         ScanOnPush: true
-      UpdateReplacePolicy: !Ref RetentionPolicy
-      DeletionPolicy: !Ref RetentionPolicy
       EncryptionConfiguration:
         EncryptionType: AES256
       ImageTagMutability: MUTABLE
@@ -139,6 +133,8 @@ Resources:
             Value: !Ref AWS::Region
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
+          - Name: DockerFilePath
+            Value: !Ref DockerFilePath
           - Name: CONTAINER_NAME
             Value: !Ref EcsContainerName
       Source:
