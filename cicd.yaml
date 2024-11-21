@@ -204,6 +204,22 @@ Resources:
                 - Name: SourceOutput
               RunOrder: 1
 
+        - Name: Build
+          Actions:
+            - Name: BuildApp
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref AppBuildProject
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+              RunOrder: 1
+
         - Name: InfrastructureDeploy
           Actions:
             - Name: BuildInfra
@@ -231,7 +247,6 @@ Resources:
                 RoleArn: !GetAtt CloudFormationServiceRole.Arn
                 StackName: !Sub ${ProjectName}-infra
                 TemplatePath: InfraBuildOutput::ecs-cluster.yaml
-                TimeoutInMinutes: 3
                 ParameterOverrides: !Sub |
                   {
                     "Environment": "${Environment}",
@@ -242,22 +257,6 @@ Resources:
               InputArtifacts:
                 - Name: InfraBuildOutput
               RunOrder: 2
-
-        - Name: Build
-          Actions:
-            - Name: BuildApp
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: '1'
-              Configuration:
-                ProjectName: !Ref AppBuildProject
-              InputArtifacts:
-                - Name: SourceOutput
-              OutputArtifacts:
-                - Name: BuildOutput
-              RunOrder: 1
 
         - Name: Deploy
           Actions:
