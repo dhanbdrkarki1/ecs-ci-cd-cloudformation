@@ -392,27 +392,27 @@ Resources:
                 Resource: '*'
 
   ECSApplicationTaskRole:
-  Type: AWS::IAM::Role
-  Properties:
-    RoleName: ECSApplicationTaskRole
-    AssumeRolePolicyDocument:
-      Version: '2012-10-17'
-      Statement:
-        - Effect: Allow
-          Principal:
-            Service: ecs-tasks.amazonaws.com
-          Action: sts:AssumeRole
-    Policies:
-      - PolicyName: TaskPolicy
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - s3:*
-              Resource: "*"
-    ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ECSApplicationTaskRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+            Policies:
+              - PolicyName: TaskPolicy
+                PolicyDocument:
+                  Version: '2012-10-17'
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - s3:*
+                      Resource: "*"
+            ManagedPolicyArns:
+              - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
 
   ECSCloudWatchLogGroup:
     Type: AWS::Logs::LogGroup
