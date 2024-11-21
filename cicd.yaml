@@ -214,6 +214,24 @@ Resources:
                 Version: '1'
               Configuration:
                 ProjectName: !Ref InfraTemplateValidationProject
+                EnvironmentVariables: !Sub |
+                  [
+                    {
+                      "name": "Environment",
+                      "value": "${Environment}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "ProjectName",
+                      "value": "${ProjectName}",
+                      "type": "PLAINTEXT"
+                    },
+                    {
+                      "name": "ContainerPort",
+                      "value": "${ContainerPort}",
+                      "type": "PLAINTEXT"
+                    }
+                  ]
               InputArtifacts:
                 - Name: SourceOutput
               OutputArtifacts:
