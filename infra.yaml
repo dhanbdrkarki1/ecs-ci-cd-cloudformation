@@ -391,7 +391,7 @@ Resources:
                   - ec2:DeleteNetworkInterface
                 Resource: '*'
 
-ECSApplicationTaskRole:
+  ECSApplicationTaskRole:
   Type: AWS::IAM::Role
   Properties:
     RoleName: ECSApplicationTaskRole
