@@ -260,7 +260,7 @@ Resources:
                 ActionMode: CREATE_UPDATE
                 RoleArn: !GetAtt CloudFormationServiceRole.Arn
                 StackName: !Sub ${ProjectName}-infra
-                TemplatePath: InfraTemplateValidationOutput::ecs-cluster.yaml
+                TemplatePath: InfraTemplateValidationOutput::infra.yaml
                 ParameterOverrides: !Sub |
                   {
                     "Environment": "${Environment}",
