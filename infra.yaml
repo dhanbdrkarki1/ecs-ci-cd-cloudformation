@@ -1,0 +1,584 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Three-Tier ECS Application
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: blog
+    Description: The name of the project.
+
+  Environment:
+    Type: String
+    Description: Environment name
+    Default: dev
+
+  # ECS Params
+  ContainerPort:
+    Type: Number
+    Description: Container port
+    Default: 3000
+
+  # VPC Params
+  VPCBlock:
+    Type: String
+    Default: 10.1.0.0/20
+    Description: CIDR block for the VPC
+
+  PublicSubnet1Block:
+    Type: String
+    Default: 10.1.0.0/24
+    Description: CIDR block for the public subnet in us-east-1a
+
+  PublicSubnet2Block:
+    Type: String
+    Default: 10.1.1.0/24
+    Description: CIDR block for the public subnet in us-east-1b
+
+  PrivateSubnet1Block:
+    Type: String
+    Default: 10.1.2.0/24
+    Description: CIDR block for the private subnet in us-east-1a
+
+  PrivateSubnet2Block:
+    Type: String
+    Default: 10.1.3.0/24
+    Description: CIDR block for the private subnet in us-east-1b
+
+  PrivateSubnet3Block:
+    Type: String
+    Default: 10.1.4.0/24
+    Description: CIDR block for the third private subnet in us-east-1a
+
+  PrivateSubnet4Block:
+    Type: String
+    Default: 10.1.5.0/24
+    Description: CIDR block for the fourth private subnet in us-east-1b
+
+  # CodeBuild and ECR
+  ConnectionArn:
+    Description: The CodeConnections ARN for your Docker container source repository.
+    Type: String
+  FullRepositoryId:
+    Description: The full repository ID to use with your CodeConnections connection.
+    Type: String
+  BranchName:
+    Description: The branch name to use with your CodeConnections connection.
+    Type: String
+  CodePipelineName:
+    Description: The CodePipeline pipeline name that will build and deploy your Docker image from source code.
+    Type: String
+    Default: SimpleDockerService
+  DockerBuildContext:
+    Description: The set of files Docker build can acccess.
+    Type: String
+    Default: .
+  DockerFilePath:
+    Description: Path to the Dockerfile.
+    Type: String
+    Default: ./Dockerfile
+  ImageTag:
+    Description: The image tag to use when building and deploying your Docker image.
+    Type: String
+    Default: latest
+  RetentionPolicy:
+    Description: Define if you'd like the resource retained or deleted when the
+      CloudFormation stack is deleted.
+    Type: String
+    Default: Delete
+    AllowedValues:
+      - Delete
+      - Retain
+
+Resources:
+  # VPC
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCBlock
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: blog-vpc
+
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: blog-igw
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # NAT Gateway and EIP for private subnet internet access
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  # Public Route Table
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: blog-rtb-public
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  # Private Route Tables
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: blog-rtb-private1-us-east-1a
+
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: blog-rtb-private2-us-east-1b
+
+  PrivateRouteTable3:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: blog-rtb-private3-us-east-1a
+
+  PrivateRouteTable4:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: blog-rtb-private4-us-east-1b
+
+  # Subnets
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet1Block
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ''
+      Tags:
+        - Key: Name
+          Value: blog-subnet-public1-us-east-1a
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet2Block
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ''
+      Tags:
+        - Key: Name
+          Value: blog-subnet-public2-us-east-1b
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet1Block
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ''
+      Tags:
+        - Key: Name
+          Value: blog-subnet-private1-us-east-1a
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet2Block
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ''
+      Tags:
+        - Key: Name
+          Value: blog-subnet-private2-us-east-1b
+
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet3Block
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ''
+      Tags:
+        - Key: Name
+          Value: blog-subnet-private3-us-east-1a
+
+  PrivateSubnet4:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet4Block
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ''
+      Tags:
+        - Key: Name
+          Value: blog-subnet-private4-us-east-1b
+
+  # Routes
+  # Route for private subnet1 internet access via NAT Gateway
+  PrivateSubnet1Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+
+  # Route for private subnet 2 internet access via NAT Gateway
+  PrivateSubnet2Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+
+  # Subnet Route Table Associations
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable1
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable2
+
+  PrivateSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet3
+      RouteTableId: !Ref PrivateRouteTable3
+
+  PrivateSubnet4RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet4
+      RouteTableId: !Ref PrivateRouteTable4
+
+  # S3 VPC Endpoint
+  # S3VPCEndpoint:
+  #   Type: AWS::EC2::VPCEndpoint
+  #   Properties:
+  #     ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+  #     VpcId: !Ref VPC
+  #     RouteTableIds:
+  #       - !Ref PrivateRouteTable1
+  #       - !Ref PrivateRouteTable2
+  #       - !Ref PrivateRouteTable3
+  #       - !Ref PrivateRouteTable4
+  #     VpcEndpointType: Gateway
+
+  # Security Groups
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for ALB
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for ECS tasks in private subnets
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ContainerPort
+          ToPort: !Ref ContainerPort
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  # ALB Configuration
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: MyApplicationALB
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Scheme: internet-facing
+      Type: application
+
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPC
+      Port: !Ref ContainerPort
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckProtocol: HTTP
+      # HealthCheckPort: '80'
+      HealthCheckPath: /
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+
+  # ECS Cluster and IAM Roles
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${ProjectName}-${Environment}-cluster"
+      CapacityProviders:
+        - FARGATE
+        - FARGATE_SPOT
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE
+          Weight: 1
+
+  ECSExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ECSExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ECSExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:BatchCheckLayerAvailability
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - ec2:Describe*
+                  - ec2:AttachNetworkInterface
+                  - ec2:DeleteNetworkInterface
+                Resource: '*'
+
+  ECSApplicationTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ECSApplicationTaskRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  ECSCloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /ecs/${ProjectName}
+      RetentionInDays: 30
+
+  # ECS Task Definition and Service
+  ECSTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub ${ProjectName}
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: '256'
+      Memory: '512'
+      # remove later
+      ExecutionRoleArn: !Ref ECSExecutionRole
+      # ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn
+
+      TaskRoleArn: !Ref ECSApplicationTaskRole
+      ContainerDefinitions:
+        - Name: !Sub ${ProjectName}
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}:latest
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ECSCloudWatchLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+
+  ECSService:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - ALB
+      - ALBListener
+    Properties:
+      ServiceName: !Sub ${ProjectName}-service
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref ECSTaskDefinition
+      DesiredCount: 2
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          AssignPublicIp: DISABLED
+      LoadBalancers:
+        - ContainerName: !Sub ${ProjectName}
+          ContainerPort: !Ref ContainerPort
+          TargetGroupArn: !Ref ALBTargetGroup
+      DeploymentConfiguration:
+        # run up to twice the desired number of tasks during the deployment process.
+        # prevent downtime, as ECS can start new tasks before stopping the old 
+        MaximumPercent: 200
+        # ensures no tasks are stopped until new ones are healthy, guaranteeing zero downtime for the service.
+        MinimumHealthyPercent: 100
+        DeploymentCircuitBreaker:
+          Enable: true # Enables the deployment circuit breaker feature, which monitors deployments for failures
+          Rollback: true # Automatically rolls back to the last stable deployment if the new deployment fails 
+      # provides shell access to your running tasks
+      EnableExecuteCommand: true
+      # Automatically adds ECS-managed tags to the tasks created by this service
+      EnableECSManagedTags: true
+      # Ensures that the tags applied to the ECS service are propagated to the tasks created by the service
+      PropagateTags: SERVICE
+
+
+  # # Database
+  # # Security group for RDS
+  # RDSSecurityGroup:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupDescription: Security group for RDS
+  #     VpcId: !Ref VPC
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: 5432
+  #         ToPort: 5432
+  #         SourceSecurityGroupId: !Ref ECSSecurityGroup
+  #     SecurityGroupEgress:
+  #       - IpProtocol: -1
+  #         CidrIp: 0.0.0.0/0
+
+  # # RDS Subnet Group
+  # DBSubnetGroup:
+  #   Type: AWS::RDS::DBSubnetGroup
+  #   Properties:
+  #     DBSubnetGroupDescription: Subnet group for RDS
+  #     SubnetIds:
+  #       - !Ref PrivateSubnet3
+  #       - !Ref PrivateSubnet4
+  #     Tags:
+  #       - Key: Name
+  #         Value: blog-db-subnet-group
+
+  # # RDS Database Instance
+  # RDSInstance:
+  #   Type: AWS::RDS::DBInstance
+  #   Properties:
+  #     Engine: postgres
+  #     EngineVersion: '16.3'
+  #     DBInstanceClass: db.t3.micro
+  #     AllocatedStorage: '20'
+  #     DBSubnetGroupName: !Ref DBSubnetGroup
+  #     VPCSecurityGroups:
+  #       - !Ref RDSSecurityGroup
+  #     DBName: blogdb
+  #     MasterUsername: mydbuser
+  #     MasterUserPassword: Password0
+  #     MultiAZ: true
+  #     PubliclyAccessible: false
+
+  # ECR Repository for storing Docker images
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub "${ProjectName}-repository"
+      UpdateReplacePolicy: !Ref RetentionPolicy
+      DeletionPolicy: !Ref RetentionPolicy
+
+Outputs:
+  ALBEndpoint:
+    Description: The URL of the application load balancer
+    Value: !GetAtt ALB.DNSName
+
+  ClusterName:
+    Description: ECS Cluster Name
+    Value: !GetAtt ECSCluster.Name
+
+  ServiceName:
+    Description: ECS Service Name
+    Value: !GetAtt ECSService.Name
+
+  # RDSInstanceEndpoint:
+  #   Description: The endpoint address of the RDS instance
+  #   Value: !GetAtt RDSInstance.Endpoint.Address
