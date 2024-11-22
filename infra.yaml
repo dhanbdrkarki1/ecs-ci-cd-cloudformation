@@ -270,7 +270,7 @@ Resources:
       SubnetId: !Ref PrivateSubnet4
       RouteTableId: !Ref PrivateRouteTable4
 
-  # S3 VPC Endpoint
+  # S3 Gateway endpoint for ECR
   S3VPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -279,11 +279,11 @@ Resources:
       RouteTableIds:
         - !Ref PrivateRouteTable1
         - !Ref PrivateRouteTable2
-        - !Ref PrivateRouteTable3
-        - !Ref PrivateRouteTable4
+        # - !Ref PrivateRouteTable3
+        # - !Ref PrivateRouteTable4
       VpcEndpointType: Gateway
 
-  # ECR Dcoker VPC Endpoint
+  # For ECR Docker Registry
   ECRDkrVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -297,7 +297,7 @@ Resources:
       SecurityGroupIds:
         - !Ref ECSSecurityGroup
 
-  # ECR API endpoints
+  # For ECR API
   ECRApiVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
