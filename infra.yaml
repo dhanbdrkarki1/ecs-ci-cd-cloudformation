@@ -283,32 +283,33 @@ Resources:
         - !Ref PrivateRouteTable4
       VpcEndpointType: Gateway
 
-# Add these to infra.yaml
-ECRDkrVPCEndpoint:
-  Type: AWS::EC2::VPCEndpoint
-  Properties:
-    ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
-    VpcId: !Ref VPC
-    PrivateDnsEnabled: true
-    VpcEndpointType: Interface
-    SubnetIds:
-      - !Ref PrivateSubnet1
-      - !Ref PrivateSubnet2
-    SecurityGroupIds:
-      - !Ref ECSSecurityGroup
+  # ECR Dcoker VPC Endpoint
+  ECRDkrVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
+      VpcId: !Ref VPC
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref ECSSecurityGroup
 
-ECRApiVPCEndpoint:
-  Type: AWS::EC2::VPCEndpoint
-  Properties:
-    ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.api
-    VpcId: !Ref VPC
-    PrivateDnsEnabled: true
-    VpcEndpointType: Interface
-    SubnetIds:
-      - !Ref PrivateSubnet1
-      - !Ref PrivateSubnet2
-    SecurityGroupIds:
-      - !Ref ECSSecurityGroup
+  # ECR API endpoints
+  ECRApiVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.api
+      VpcId: !Ref VPC
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !Ref ECSSecurityGroup
 
   # Security Groups
   ALBSecurityGroup:
