@@ -484,14 +484,14 @@ Resources:
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-repository:latest
           PortMappings:
             - ContainerPort: !Ref ContainerPort
-          HealthCheck:
-            Command:
-              - CMD-SHELL
-              - !Sub "curl -f http://localhost:${ContainerPort}/ || exit 1"
-            Interval: 60    # Check every 60 seconds
-            Timeout: 5      # Wait up to 5 seconds for a response
-            Retries: 3      # Allow 3 retries before marking unhealthy
-            StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
+          # HealthCheck:
+          #   Command:
+          #     - CMD-SHELL
+          #     - !Sub "curl -f http://localhost:${ContainerPort}/ || exit 1"
+          #   Interval: 60    # Check every 60 seconds
+          #   Timeout: 5      # Wait up to 5 seconds for a response
+          #   Retries: 3      # Allow 3 retries before marking unhealthy
+          #   StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
           Memory: 512
           MemoryReservation: 256
           LogConfiguration:
