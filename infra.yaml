@@ -469,7 +469,7 @@ Resources:
           HealthCheck:
             Command:
               - CMD-SHELL
-              - curl -f http://localhost:${ContainerPort}/ || exit 1
+              - !Sub "curl -f http://localhost:${ContainerPort}/ || exit 1"
             Interval: 30
             Timeout: 5
             Retries: 3
