@@ -270,18 +270,22 @@ Resources:
       SubnetId: !Ref PrivateSubnet4
       RouteTableId: !Ref PrivateRouteTable4
 
-  # S3 Gateway endpoint for ECR
-  S3VPCEndpoint:
-    Type: AWS::EC2::VPCEndpoint
+  # dedicated security group for VPC endpoints
+  VPCEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      GroupDescription: Security group for VPC Endpoints
       VpcId: !Ref VPC
-      RouteTableIds:
-        - !Ref PrivateRouteTable1
-        - !Ref PrivateRouteTable2
-        # - !Ref PrivateRouteTable3
-        # - !Ref PrivateRouteTable4
-      VpcEndpointType: Gateway
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
 
   # For ECR Docker Registry
   ECRDkrVPCEndpoint:
@@ -295,7 +299,7 @@ Resources:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
       SecurityGroupIds:
-        - !Ref ECSSecurityGroup
+        - !GetAtt VPCEndpointSecurityGroup.GroupId
 
   # For ECR API
   ECRApiVPCEndpoint:
@@ -309,7 +313,20 @@ Resources:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
       SecurityGroupIds:
-        - !Ref ECSSecurityGroup
+        - !GetAtt VPCEndpointSecurityGroup.GroupId
+
+  # S3 Gateway endpoint for ECR
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcId: !Ref VPC
+      RouteTableIds:
+        - !Ref PrivateRouteTable1
+        - !Ref PrivateRouteTable2
+        # - !Ref PrivateRouteTable3
+        # - !Ref PrivateRouteTable4
+      VpcEndpointType: Gateway
 
   # Security Groups
   ALBSecurityGroup:
@@ -396,7 +413,6 @@ Resources:
   ECSExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${ProjectName}-${Environment}-ECSExecutionRole"  # Add unique name
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -407,7 +423,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       Policies:
-        - PolicyName: ECSExecutionPolicy
+        - PolicyName: ECRAccessPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -416,8 +432,11 @@ Resources:
                   - ecr:GetAuthorizationToken
                   - ecr:BatchCheckLayerAvailability
                   - ecr:GetDownloadUrlForLayer
+                  - ecr:GetRepositoryPolicy
+                  - ecr:DescribeRepositories
+                  - ecr:ListImages
+                  - ecr:DescribeImages
                   - ecr:BatchGetImage
-                # Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-repository
                 Resource: '*'
 
   ECSApplicationTaskRole:
