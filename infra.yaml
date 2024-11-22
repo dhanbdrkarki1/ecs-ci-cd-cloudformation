@@ -283,6 +283,33 @@ Resources:
         - !Ref PrivateRouteTable4
       VpcEndpointType: Gateway
 
+# Add these to infra.yaml
+ECRDkrVPCEndpoint:
+  Type: AWS::EC2::VPCEndpoint
+  Properties:
+    ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
+    VpcId: !Ref VPC
+    PrivateDnsEnabled: true
+    VpcEndpointType: Interface
+    SubnetIds:
+      - !Ref PrivateSubnet1
+      - !Ref PrivateSubnet2
+    SecurityGroupIds:
+      - !Ref ECSSecurityGroup
+
+ECRApiVPCEndpoint:
+  Type: AWS::EC2::VPCEndpoint
+  Properties:
+    ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.api
+    VpcId: !Ref VPC
+    PrivateDnsEnabled: true
+    VpcEndpointType: Interface
+    SubnetIds:
+      - !Ref PrivateSubnet1
+      - !Ref PrivateSubnet2
+    SecurityGroupIds:
+      - !Ref ECSSecurityGroup
+
   # Security Groups
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -366,7 +393,7 @@ Resources:
   ECSExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: ECSExecutionRole
+      RoleName: !Sub "${ProjectName}-${Environment}-ECSExecutionRole"  # Add unique name
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -374,6 +401,8 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       Policies:
         - PolicyName: ECSExecutionPolicy
           PolicyDocument:
@@ -382,16 +411,10 @@ Resources:
               - Effect: Allow
                 Action:
                   - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
                   - ecr:GetDownloadUrlForLayer
                   - ecr:BatchGetImage
-                  - ecr:BatchCheckLayerAvailability
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                  - logs:CreateLogGroup
-                  - ec2:Describe*
-                  - ec2:AttachNetworkInterface
-                  - ec2:DeleteNetworkInterface
-                Resource: '*'
+                Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-repository
 
   ECSApplicationTaskRole:
     Type: AWS::IAM::Role
@@ -438,9 +461,19 @@ Resources:
 
       ContainerDefinitions:
         - Name: !Sub ${ProjectName}
+          Essential: true
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-repository:latest
           PortMappings:
             - ContainerPort: !Ref ContainerPort
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - curl -f http://localhost:${ContainerPort}/ || exit 1
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+          Memory: 512
+          MemoryReservation: 256
           LogConfiguration:
             LogDriver: awslogs
             Options:
