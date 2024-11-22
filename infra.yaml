@@ -422,7 +422,8 @@ Resources:
                   - ecr:BatchCheckLayerAvailability
                   - ecr:GetDownloadUrlForLayer
                   - ecr:BatchGetImage
-                Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-repository
+                # Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-repository
+                Resource: '*'
 
   ECSApplicationTaskRole:
     Type: AWS::IAM::Role
