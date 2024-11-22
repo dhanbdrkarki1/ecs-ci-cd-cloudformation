@@ -19,3 +19,23 @@ For ECS tasks to pull images from ECR, you need three VPC endpoints:
 - Application needs to write to DynamoDB
 - Application needs to send messages to SQS
 - Application needs to access other AWS services
+
+
+## Deployment Configuration
+```
+ECSService:
+  Type: AWS::ECS::Service
+  Properties:
+    # ... other properties ...
+    DesiredCount: 2
+    DeploymentConfiguration:
+      MaximumPercent: 200      # This allows up to double the desired count during deployment
+      MinimumHealthyPercent: 100   # This ensures no tasks are stopped until new ones are healthy
+```
+
+When MaximumPercent is set to 200, during a deployment ECS is allowed to run up to twice the desired count of tasks temporarily. This means:
+1. Your desired count is 2
+2. During deployment, ECS will start 2 new tasks (with the new version)
+3. The old 2 tasks keep running until the new tasks are healthy
+4. So temporarily you'll see 4 tasks (2 old + 2 new)
+

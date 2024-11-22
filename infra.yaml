@@ -488,9 +488,10 @@ Resources:
             Command:
               - CMD-SHELL
               - !Sub "curl -f http://localhost:${ContainerPort}/ || exit 1"
-            Interval: 30
-            Timeout: 5
-            Retries: 3
+            Interval: 60    # Check every 60 seconds
+            Timeout: 5      # Wait up to 5 seconds for a response
+            Retries: 3      # Allow 3 retries before marking unhealthy
+            StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
           Memory: 512
           MemoryReservation: 256
           LogConfiguration:
@@ -526,8 +527,9 @@ Resources:
       DeploymentConfiguration:
         # run up to twice the desired number of tasks during the deployment process.
         # prevent downtime, as ECS can start new tasks before stopping the old 
+        # allows up to double the desired count during deployment
         MaximumPercent: 200
-        # ensures no tasks are stopped until new ones are healthy, guaranteeing zero downtime for the service.
+        # ensures no tasks are stopped until new ones are healthy
         MinimumHealthyPercent: 100
         DeploymentCircuitBreaker:
           Enable: true # Enables the deployment circuit breaker feature, which monitors deployments for failures
