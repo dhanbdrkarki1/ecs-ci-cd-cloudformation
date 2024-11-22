@@ -8,26 +8,6 @@
         "ParameterValue": "ecs-demo-app"
     },
     {
-        "ParameterKey": "GitHubRepoId",
-        "ParameterValue": "dhanbdrkarki1/ecs-ci-cd-cloudformation"
-    },
-    {
-        "ParameterKey": "GitHubBranch",
-        "ParameterValue": "cicd"
-    },
-    {
-        "ParameterKey": "CodeStarConnectionArn",
-        "ParameterValue": "arn:aws:codeconnections:us-east-1:818210291631:connection/c5eac169-0189-4f8e-a660-0c480928bf2d"
-    },
-    {
-        "ParameterKey": "EcsContainerName",
-        "ParameterValue": "ecs-demo-app"
-    },
-    {
-        "ParameterKey": "DockerFilePath",
-        "ParameterValue": "./Dockerfile"
-    },
-    {
         "ParameterKey": "ContainerPort",
         "ParameterValue": "3000"
     }

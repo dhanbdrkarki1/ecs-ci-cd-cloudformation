@@ -271,17 +271,17 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable4
 
   # S3 VPC Endpoint
-  # S3VPCEndpoint:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
-  #     VpcId: !Ref VPC
-  #     RouteTableIds:
-  #       - !Ref PrivateRouteTable1
-  #       - !Ref PrivateRouteTable2
-  #       - !Ref PrivateRouteTable3
-  #       - !Ref PrivateRouteTable4
-  #     VpcEndpointType: Gateway
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcId: !Ref VPC
+      RouteTableIds:
+        - !Ref PrivateRouteTable1
+        - !Ref PrivateRouteTable2
+        - !Ref PrivateRouteTable3
+        - !Ref PrivateRouteTable4
+      VpcEndpointType: Gateway
 
   # Security Groups
   ALBSecurityGroup:
@@ -332,8 +332,9 @@ Resources:
       Port: !Ref ContainerPort
       Protocol: HTTP
       TargetType: ip
+      HealthCheckEnabled: true
       HealthCheckProtocol: HTTP
-      # HealthCheckPort: '80'
+      HealthCheckPort: !Ref ContainerPort
       HealthCheckPath: /
       HealthCheckIntervalSeconds: 30
       HealthCheckTimeoutSeconds: 5
@@ -403,17 +404,18 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
-      Policies:
-        - PolicyName: !Sub "${ProjectName}-${Environment}-TaskPolicy"
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:*
-                Resource: "*"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      # Policies:
+      #   - PolicyName: !Sub "${ProjectName}-${Environment}-TaskPolicy"
+      #     PolicyDocument:
+      #       Version: '2012-10-17'
+      #       Statement:
+      #         - Effect: Allow
+      #           Action:
+      #             - 'logs:CreateLogStream'
+      #             - 'logs:PutLogEvents'
+      #           Resource: '*'
+      # ManagedPolicyArns:
+      #   - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
 
   ECSCloudWatchLogGroup:
     Type: AWS::Logs::LogGroup
@@ -479,11 +481,11 @@ Resources:
           Enable: true # Enables the deployment circuit breaker feature, which monitors deployments for failures
           Rollback: true # Automatically rolls back to the last stable deployment if the new deployment fails 
       # provides shell access to your running tasks
-      EnableExecuteCommand: true
-      # Automatically adds ECS-managed tags to the tasks created by this service
-      EnableECSManagedTags: true
-      # Ensures that the tags applied to the ECS service are propagated to the tasks created by the service
-      PropagateTags: SERVICE
+      # EnableExecuteCommand: true
+      # # Automatically adds ECS-managed tags to the tasks created by this service
+      # EnableECSManagedTags: true
+      # # Ensures that the tags applied to the ECS service are propagated to the tasks created by the service
+      # PropagateTags: SERVICE
 
 
   # # Database
