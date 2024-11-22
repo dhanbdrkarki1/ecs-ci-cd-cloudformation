@@ -352,9 +352,7 @@ Resources:
           ToPort: !Ref ContainerPort
           SourceSecurityGroupId: !Ref ALBSecurityGroup
       SecurityGroupEgress:
-        - IpProtocol: -1  # Allow all outbound traffic
-          FromPort: -1
-          ToPort: -1
+        - IpProtocol: -1
           CidrIp: 0.0.0.0/0
 
   # ALB Configuration
