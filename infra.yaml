@@ -283,8 +283,6 @@ Resources:
           SourceSecurityGroupId: !Ref ECSSecurityGroup
       SecurityGroupEgress:
         - IpProtocol: -1
-          FromPort: -1
-          ToPort: -1
           CidrIp: 0.0.0.0/0
 
   # For ECR Docker Registry
