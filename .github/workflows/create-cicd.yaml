@@ -18,6 +18,10 @@ jobs:
       CONTAINER_PORT: 3000
       CLOUDFORMATION_CICD_TEMPLATE_FILE: cicd.yaml
       PipelineApproverEmail: dhanbdrkarki111@gmail.com
+      # Common Tags
+      Team: DevOps
+      CostCenter: Finance
+      Owner: Dhan Bdr Karki
 
     steps:
       # Checkout code from the repository
@@ -59,6 +63,9 @@ jobs:
               DockerFilePath=$DOCKER_FILE_PATH \
               ContainerPort=$CONTAINER_PORT \
               ApproverEmail=$PipelineApproverEmail
+              Team=${Team}
+              CostCenter=${CostCenter}
+              Owner=${Owner}
       
       # Verify CloudFormation Stack Success
       - name: Verify deployment
