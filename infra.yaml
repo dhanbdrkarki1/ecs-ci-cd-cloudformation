@@ -21,38 +21,31 @@ Parameters:
   # VPC Params
   VPCBlock:
     Type: String
-    Default: 10.1.0.0/20
     Description: CIDR block for the VPC
 
   PublicSubnet1Block:
     Type: String
-    Default: 10.1.0.0/24
-    Description: CIDR block for the public subnet in us-east-1a
+    Description: CIDR block for the public subnet in the first region
 
   PublicSubnet2Block:
     Type: String
-    Default: 10.1.1.0/24
-    Description: CIDR block for the public subnet in us-east-1b
+    Description: CIDR block for the public subnet in second region
 
   PrivateSubnet1Block:
     Type: String
-    Default: 10.1.2.0/24
-    Description: CIDR block for the private subnet in us-east-1a
+    Description: CIDR block for the private subnet in the first region
 
   PrivateSubnet2Block:
     Type: String
-    Default: 10.1.3.0/24
-    Description: CIDR block for the private subnet in us-east-1b
+    Description: CIDR block for the private subnet in second region
 
   PrivateSubnet3Block:
     Type: String
-    Default: 10.1.4.0/24
-    Description: CIDR block for the third private subnet in us-east-1a
+    Description: CIDR block for the third private subnet in the first region
 
   PrivateSubnet4Block:
     Type: String
-    Default: 10.1.5.0/24
-    Description: CIDR block for the fourth private subnet in us-east-1b
+    Description: CIDR block for the fourth private subnet in second region
 
 Resources:
   # VPC
