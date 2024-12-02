@@ -31,7 +31,7 @@ jobs:
         run: |
           aws cloudformation deploy \
             --stack-name ecs-demo-cicd \
-            --template-file cicd.yml \
+            --template-file cicd.yaml \
             --parameter-overrides file://cicd-params.json \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
             --no-fail-on-empty-changeset
