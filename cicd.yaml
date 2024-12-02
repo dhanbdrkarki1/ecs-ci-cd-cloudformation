@@ -48,7 +48,7 @@ Parameters:
 
   PublicSubnet1Block:
     Type: String
-    # Default: 10.1.0.0/24
+    Default: 10.1.0.0/24
     Description: CIDR block for the public subnet in the first region
 
   PublicSubnet2Block:
@@ -75,6 +75,23 @@ Parameters:
     Type: String
     Default: 10.1.5.0/24
     Description: CIDR block for the fourth private subnet in the second region
+
+  # Common Tags
+  Team:
+    Type: String
+    Default: DevOps
+    Description: The name of the Project Team.
+
+  CostCenter:
+    Type: String
+    Default: IT
+    Description: The name of the cost center.
+
+  Owner:
+    Type: String
+    Default: null
+    Description: The name of the Project owner.
+
 
 Resources:
   ECRRepository:
@@ -354,6 +371,41 @@ Resources:
                     "PrivateSubnet3Block": "${PrivateSubnet3Block}",
                     "PrivateSubnet4Block": "${PrivateSubnet4Block}",
                   }
+                Tags: |
+                  [
+                    {
+                      "Key": "Environment",
+                      "Value": "${Environment}"
+                    },
+                    {
+                      "Key": "Project",
+                      "Value": "${ProjectName}"
+                    },
+                    {
+                      "Key": "Team",
+                      "Value": "${Team}"
+                    },
+                    {
+                      "Key": "CostCenter",
+                      "Value": "${CostCenter}"
+                    },
+                    {
+                      "Key": "Owner",
+                      "Value": "${Owner}"
+                    },
+                    {
+                      "Key": "ManagedBy",
+                      "Value": "CloudFormation"
+                    },
+                    {
+                      "Key": "CreatedBy",
+                      "Value": "CodePipeline"
+                    },
+                    {
+                      "Key": "LastModified",
+                      "Value": "${AWS::Timestamp}"
+                    }
+                  ]
                 Capabilities: CAPABILITY_NAMED_IAM
               InputArtifacts:
                 - Name: InfraTemplateValidationOutput
