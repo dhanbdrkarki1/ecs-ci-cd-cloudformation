@@ -8,37 +8,61 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    env:
+      # GitHub variables that will be used in the workflow
+      ENVIRONMENT: dev
+      PROJECT_NAME: ecs-demo-app
+      ECS_CONTAINER_NAME: ecs-demo-app
+      DOCKER_FILE_PATH: ./Dockerfile
+      CONTAINER_PORT: 3000
+      CLOUDFORMATION_CICD_TEMPLATE_FILE: cicd.yaml
+
     steps:
+      # Checkout code from the repository
       - name: Checkout Code
         uses: actions/checkout@v3
       
+      # Set up AWS credentials using GitHub Secrets
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-
+      
+      # Install Cloudformation template validation tool
       - name: Install cfn-lint
         run: |
           pip install cfn-lint
 
+      # Validate Cloudformation Template
       - name: Lint CloudFormation template
         run: |
           cfn-lint cicd.yaml infra.yaml
 
+      # Deploy CloudFormation Stack
       - name: Deploy CloudFormation Stack
         run: |
           aws cloudformation deploy \
-            --stack-name ecs-demo-cicd \
-            --template-file cicd.yaml \
-            --parameter-overrides file://cicd-params.json \
+            --stack-name "$PROJECT_NAME-cicd" \
+            --template-file $CLOUDFORMATION_CICD_TEMPLATE_FILE \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+            --parameter-overrides \
+              Environment=$ENVIRONMENT \
+              ProjectName=$PROJECT_NAME \
+              GitHubRepoId=${{ github.repository }} \
+              GitHubBranch=${{ github.ref_name }} \
+              CodeStarConnectionArn=${{ secrets.CODESTAR_CONNECTION_ARN }} \
+              EcsContainerName=$ECS_CONTAINER_NAME \
+              DockerFilePath=$DOCKER_FILE_PATH \
+              ContainerPort=$CONTAINER_PORT
       
+      # Verify CloudFormation Stack Success
       - name: Verify deployment
         run: |
           STACK_STATUS=$(aws cloudformation describe-stacks \
-            --stack-name ecs-demo-cicd \
+            --stack-name "$PROJECT_NAME-cicd" \
             --query 'Stacks[0].StackStatus' \
             --output text)
           
