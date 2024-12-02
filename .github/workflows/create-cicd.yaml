@@ -35,4 +35,12 @@ jobs:
             --parameter-overrides file://params.json \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
             --no-fail-on-empty-changeset
+      
+      - name: Verify Stack deployment
+        if: github.ref == 'refs/heads/cicd' && github.event_name == 'push'
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name ecs-demo-cicd \
+            --query 'Stacks[0].StackStatus' \
+            --output text
 
