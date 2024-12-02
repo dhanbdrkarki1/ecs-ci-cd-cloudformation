@@ -290,15 +290,6 @@ Resources:
                 Version: '1'
               Configuration:
                 NotificationArn: !Ref ApprovalTopic
-                CustomData: !Sub |
-                  Please review and approve the deployment for ${ProjectName} to ${Environment} environment.
-
-                  Project: ${ProjectName}
-                  Environment: ${Environment}
-                  Pipeline Name: ${ProjectName}-pipeline
-
-                  To approve or reject this deployment, click the link below:
-                  https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${ProjectName}-pipeline
               RunOrder: 1
 
         - Name: Deploy
