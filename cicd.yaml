@@ -36,6 +36,10 @@ Parameters:
     Type: String
     Description: Name of the ECS container
 
+  ApproverEmail:
+    Type: String
+    Description: Email address to receive approval notifications
+
 Resources:
   ECRRepository:
     Type: AWS::ECR::Repository
@@ -51,6 +55,35 @@ Resources:
           Value: !Ref Environment
         - Key: Project
           Value: !Ref ProjectName
+
+  # SNS Topic and Subscription: for approving the deployment
+  ApprovalTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: Pipeline Approval Topic
+      TopicName: !Sub ${ProjectName}-pipeline-approval
+
+  ApprovalSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      TopicArn: !Ref ApprovalTopic
+      Endpoint: !Ref ApproverEmail
+
+  # SNS Topic Policy
+  ApprovalTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref ApprovalTopic
+      Topics:
+        - !Ref ApprovalTopic
 
 # CloudFormation Service Role
   CloudFormationServiceRole:
