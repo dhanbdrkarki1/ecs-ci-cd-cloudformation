@@ -25,7 +25,7 @@ jobs:
 
       - name: Lint CloudFormation template
         run: |
-          cfn-lint cicd.yml
+          cfn-lint cicd.yaml infra.yaml
 
       - name: Deploy CloudFormation Stack
         run: |
