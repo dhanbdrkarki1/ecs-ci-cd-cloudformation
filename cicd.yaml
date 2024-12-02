@@ -89,6 +89,7 @@ Parameters:
 
   Owner:
     Type: String
+    Default: Me
     Description: The name of the Project owner.
 
 
