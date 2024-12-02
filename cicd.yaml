@@ -85,11 +85,10 @@ Parameters:
   CostCenter:
     Type: String
     Default: IT
-    Description: The name of the cost center.
+    Description: The name of the cost.
 
   Owner:
     Type: String
-    Default: null
     Description: The name of the Project owner.
 
 
@@ -371,7 +370,7 @@ Resources:
                     "PrivateSubnet3Block": "${PrivateSubnet3Block}",
                     "PrivateSubnet4Block": "${PrivateSubnet4Block}",
                   }
-                Tags: |
+                Tags: !Sub |
                   [
                     {
                       "Key": "Environment",
@@ -400,10 +399,6 @@ Resources:
                     {
                       "Key": "CreatedBy",
                       "Value": "CodePipeline"
-                    },
-                    {
-                      "Key": "LastModified",
-                      "Value": "${AWS::Timestamp}"
                     }
                   ]
                 Capabilities: CAPABILITY_NAMED_IAM
