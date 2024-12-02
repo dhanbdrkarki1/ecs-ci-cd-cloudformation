@@ -57,7 +57,8 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: blog-vpc
+          Value: !Sub "${ProjectName}-${Environment}-vpc"
+
 
   # Internet Gateway
   InternetGateway:
@@ -65,7 +66,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: blog-igw
+          Value: !Sub "${ProjectName}-${Environment}-igw"
 
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -92,7 +93,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: blog-rtb-public
+          Value: !Sub "${ProjectName}-${Environment}-rtb-public"
 
   PublicRoute:
     Type: AWS::EC2::Route
@@ -108,7 +109,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: blog-rtb-private1-us-east-1a
+          Value: !Sub "${ProjectName}-${Environment}-rtb-private1-${!Select [0, !GetAZs !Ref 'AWS::Region']}"
 
   PrivateRouteTable2:
     Type: AWS::EC2::RouteTable
@@ -116,7 +117,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: blog-rtb-private2-us-east-1b
+          Value: !Sub "${ProjectName}-${Environment}-rtb-private2-${!Select [0, !GetAZs !Ref 'AWS::Region']}"
 
   PrivateRouteTable3:
     Type: AWS::EC2::RouteTable
@@ -124,7 +125,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: blog-rtb-private3-us-east-1a
+          Value: !Sub "${ProjectName}-${Environment}-rtb-private3-${!Select [0, !GetAZs !Ref 'AWS::Region']}"
 
   PrivateRouteTable4:
     Type: AWS::EC2::RouteTable
@@ -132,7 +133,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: blog-rtb-private4-us-east-1b
+          Value: !Sub "${ProjectName}-${Environment}-rtb-private4-${!Select [0, !GetAZs !Ref 'AWS::Region']}"
 
   # Subnets
   PublicSubnet1:
@@ -141,12 +142,10 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnet1Block
       MapPublicIpOnLaunch: true
-      AvailabilityZone: !Select
-        - 0
-        - !GetAZs ''
+      AvailabilityZone: !Select [0, !GetAZs ""]
       Tags:
         - Key: Name
-          Value: blog-subnet-public1-us-east-1a
+          Value: !Sub "${ProjectName}-${Environment}-subnet-public1-${!Select [0, !GetAZs !Ref 'AWS::Region']}"
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
@@ -154,60 +153,52 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnet2Block
       MapPublicIpOnLaunch: true
-      AvailabilityZone: !Select
-        - 1
-        - !GetAZs ''
+      AvailabilityZone: !Select [1, !GetAZs ""]
       Tags:
         - Key: Name
-          Value: blog-subnet-public2-us-east-1b
+          Value: !Sub "${ProjectName}-${Environment}-subnet-public2-${!Select [1, !GetAZs !Ref 'AWS::Region']}"
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnet1Block
-      AvailabilityZone: !Select
-        - 0
-        - !GetAZs ''
+      AvailabilityZone: !Select [0, !GetAZs ""]
       Tags:
         - Key: Name
-          Value: blog-subnet-private1-us-east-1a
+          Value: !Sub "${ProjectName}-${Environment}-subnet-private1-${!Select [0, !GetAZs !Ref 'AWS::Region']}"
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnet2Block
-      AvailabilityZone: !Select
-        - 1
-        - !GetAZs ''
+      AvailabilityZone: !Select [1, !GetAZs ""]
       Tags:
         - Key: Name
-          Value: blog-subnet-private2-us-east-1b
+          Value: !Sub "${ProjectName}-${Environment}-subnet-private2-${!Select [1, !GetAZs !Ref 'AWS::Region']}"
+
 
   PrivateSubnet3:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnet3Block
-      AvailabilityZone: !Select
-        - 0
-        - !GetAZs ''
+      AvailabilityZone: !Select [0, !GetAZs ""]
       Tags:
         - Key: Name
-          Value: blog-subnet-private3-us-east-1a
+          Value: !Sub "${ProjectName}-${Environment}-subnet-private3-${!Select [0, !GetAZs !Ref 'AWS::Region']}"
+
 
   PrivateSubnet4:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnet4Block
-      AvailabilityZone: !Select
-        - 1
-        - !GetAZs ''
+      AvailabilityZone: !Select [1, !GetAZs ""]
       Tags:
         - Key: Name
-          Value: blog-subnet-private4-us-east-1b
+          Value: !Sub "${ProjectName}-${Environment}-subnet-private4-${!Select [1, !GetAZs !Ref 'AWS::Region']}"
 
   # Routes
   # Route for private subnet1 internet access via NAT Gateway
@@ -277,6 +268,10 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-vpc-endpoints-sg
+
 
   # For ECR Docker Registry
   ECRDkrVPCEndpoint:
@@ -315,8 +310,6 @@ Resources:
       RouteTableIds:
         - !Ref PrivateRouteTable1
         - !Ref PrivateRouteTable2
-        # - !Ref PrivateRouteTable3
-        # - !Ref PrivateRouteTable4
       VpcEndpointType: Gateway
 
   # Security Groups
@@ -333,6 +326,9 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-alb-sg
 
   ECSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -347,6 +343,9 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-ecs-sg
 
   # ALB Configuration
   ALB:
@@ -360,6 +359,9 @@ Resources:
         - !Ref ALBSecurityGroup
       Scheme: internet-facing
       Type: application
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-alb
 
   ALBTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -376,6 +378,9 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 2
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-alb-tg
 
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -398,6 +403,9 @@ Resources:
       DefaultCapacityProviderStrategy:
         - CapacityProvider: FARGATE
           Weight: 1
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-cluster
 
   ECSExecutionRole:
     Type: AWS::IAM::Role
@@ -427,6 +435,9 @@ Resources:
                   - ecr:DescribeImages
                   - ecr:BatchGetImage
                 Resource: '*'
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-ecs-execution-role
 
   ECSApplicationTaskRole:
     Type: AWS::IAM::Role
@@ -451,12 +462,18 @@ Resources:
       #           Resource: '*'
       # ManagedPolicyArns:
       #   - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-ecs-app-role
 
   ECSCloudWatchLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /ecs/${ProjectName}
       RetentionInDays: 30
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-log
 
   # ECS Task Definition and Service
   ECSTaskDefinition:
@@ -493,6 +510,9 @@ Resources:
               awslogs-group: !Ref ECSCloudWatchLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: ecs
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-ecs-task
 
   ECSService:
     Type: AWS::ECS::Service
@@ -533,6 +553,9 @@ Resources:
       # EnableECSManagedTags: true
       # # Ensures that the tags applied to the ECS service are propagated to the tasks created by the service
       # PropagateTags: SERVICE
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}
 
 
   # # Database
@@ -561,7 +584,7 @@ Resources:
   #       - !Ref PrivateSubnet4
   #     Tags:
   #       - Key: Name
-  #         Value: blog-db-subnet-group
+  #         Value: !Sub ${NamePrefix}-db-subnet-group
 
   # # RDS Database Instance
   # RDSInstance:
