@@ -70,21 +70,6 @@ Resources:
       TopicArn: !Ref ApprovalTopic
       Endpoint: !Ref ApproverEmail
 
-  # SNS Topic Policy
-  ApprovalTopicPolicy:
-    Type: AWS::SNS::TopicPolicy
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: codepipeline.amazonaws.com
-            Action: sns:Publish
-            Resource: !Ref ApprovalTopic
-      Topics:
-        - !Ref ApprovalTopic
-
 # CloudFormation Service Role
   CloudFormationServiceRole:
     Type: AWS::IAM::Role
@@ -205,6 +190,20 @@ Resources:
                   - 'codestar-connections:UseConnection'
                   - 'iam:PassRole'
                 Resource: '*'
+              # SNS permissions for approval notifications
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref ApprovalTopic
+              # Codepipeline approval action permissions
+              - Effect: Allow
+                Action:
+                  - codepipeline:PutApprovalResult
+                  - codepipeline:GetPipelineState
+                  - codepipeline:ListPipelines
+                  - codepipeline:GetPipeline
+                  - codepipeline:GetPipelineExecution
+                Resource: '*'
 
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -293,7 +292,13 @@ Resources:
                 NotificationArn: !Ref ApprovalTopic
                 CustomData: !Sub |
                   Please review and approve the deployment for ${ProjectName} to ${Environment} environment.
-                  Pipeline: ${AWS::StackName}
+
+                  Project: ${ProjectName}
+                  Environment: ${Environment}
+                  Pipeline Name: ${ProjectName}-pipeline
+
+                  To approve or reject this deployment, click the link below:
+                  https://console.aws.amazon.com/codepipeline/home?region=${AWS::Region}#/view/${ProjectName}-pipeline
               RunOrder: 1
 
         - Name: Deploy
