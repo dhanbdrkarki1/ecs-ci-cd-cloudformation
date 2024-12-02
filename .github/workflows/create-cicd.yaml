@@ -45,9 +45,9 @@ jobs:
       - name: Deploy CloudFormation Stack
         run: |
           aws cloudformation deploy \
-            --stack-name "$PROJECT_NAME-cicd" \
+            --stack-name $PROJECT_NAME-cicd \
             --template-file $CLOUDFORMATION_CICD_TEMPLATE_FILE \
-            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
             --parameter-overrides \
               Environment=$ENVIRONMENT \
               ProjectName=$PROJECT_NAME \
@@ -62,7 +62,7 @@ jobs:
       - name: Verify deployment
         run: |
           STACK_STATUS=$(aws cloudformation describe-stacks \
-            --stack-name "$PROJECT_NAME-cicd" \
+            --stack-name $PROJECT_NAME-cicd \
             --query 'Stacks[0].StackStatus' \
             --output text)
           
