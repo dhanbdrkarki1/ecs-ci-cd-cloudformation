@@ -281,6 +281,21 @@ Resources:
                 - Name: BuildOutput
               RunOrder: 2
 
+        - Name: Approve
+          Actions:
+            - Name: ManualApproval
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: '1'
+              Configuration:
+                NotificationArn: !Ref ApprovalTopic
+                CustomData: !Sub |
+                  Please review and approve the deployment for ${ProjectName} to ${Environment} environment.
+                  Pipeline: ${AWS::StackName}
+              RunOrder: 1
+
         - Name: Deploy
           Actions:
             - Name: Deploy
