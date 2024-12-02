@@ -35,11 +35,12 @@ jobs:
             --parameter-overrides file://cicd-params.json \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
       
-      - name: Verify Stack deployment
-        if: github.ref == 'refs/heads/cicd' && github.event_name == 'push'
+      - name: Verify deployment
         run: |
-          aws cloudformation describe-stacks \
+          STACK_STATUS=$(aws cloudformation describe-stacks \
             --stack-name ecs-demo-cicd \
             --query 'Stacks[0].StackStatus' \
-            --output text
+            --output text)
+          
+          echo "Stack deployment status: $STACK_STATUS"
 
