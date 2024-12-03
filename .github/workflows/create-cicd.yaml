@@ -62,9 +62,9 @@ jobs:
               EcsContainerName=$ECS_CONTAINER_NAME \
               DockerFilePath=$DOCKER_FILE_PATH \
               ContainerPort=$CONTAINER_PORT \
-              ApproverEmail=$PipelineApproverEmail
-              Team=$Team
-              CostCenter=$CostCenter
+              ApproverEmail=$PipelineApproverEmail \
+              Team=$Team \
+              CostCenter=$CostCenter \
               Owner=$Owner
       
       # Verify CloudFormation Stack Success
