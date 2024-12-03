@@ -12,8 +12,8 @@ jobs:
     env:
       # GitHub variables that will be used in the workflow
       ENVIRONMENT: dev
-      PROJECT_NAME: ecs-demo-app
-      ECS_CONTAINER_NAME: ecs-demo-app
+      PROJECT_NAME: ecs-app
+      ECS_CONTAINER_NAME: ecs-app
       DOCKER_FILE_PATH: ./Dockerfile
       CONTAINER_PORT: 3000
       CLOUDFORMATION_CICD_TEMPLATE_FILE: cicd.yaml
@@ -21,7 +21,7 @@ jobs:
       # Common Tags
       Team: DevOps
       CostCenter: Finance
-      Owner: Dhan Bdr Karki
+      Owner: "Dhan Bdr Karki"
 
     steps:
       # Checkout code from the repository
