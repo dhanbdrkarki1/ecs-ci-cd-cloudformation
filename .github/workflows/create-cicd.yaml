@@ -21,7 +21,7 @@ jobs:
       # Common Tags
       Team: DevOps
       CostCenter: Finance
-      Owner: "Dhan Bdr Karki"
+      Owner: Dhan Bdr Karki
 
     steps:
       # Checkout code from the repository
@@ -65,7 +65,7 @@ jobs:
               ApproverEmail=$PipelineApproverEmail \
               Team=$Team \
               CostCenter=$CostCenter \
-              Owner=$Owner
+              Owner="$Owner"
       
       # Verify CloudFormation Stack Success
       - name: Verify deployment
