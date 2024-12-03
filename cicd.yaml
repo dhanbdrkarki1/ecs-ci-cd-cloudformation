@@ -371,7 +371,17 @@ Resources:
                     "PrivateSubnet3Block": "${PrivateSubnet3Block}",
                     "PrivateSubnet4Block": "${PrivateSubnet4Block}",
                   }
-                StackTags: !Sub |
+                # StackTags: !Sub |
+                #   {
+                #     "Environment": "${Environment}",
+                #     "Project": "${ProjectName}",
+                #     "Team": "${Team}",
+                #     "CostCenter": "${CostCenter}",
+                #     "Owner": "${Owner}",
+                #     "ManagedBy": "CloudFormation",
+                #     "CreatedBy": "CodePipeline"
+                #   }
+                Tags: !Sub |
                   {
                     "Environment": "${Environment}",
                     "Project": "${ProjectName}",
