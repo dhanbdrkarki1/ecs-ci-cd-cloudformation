@@ -342,23 +342,25 @@ Resources:
                 RoleArn: !GetAtt CloudFormationServiceRole.Arn
                 StackName: !Sub ${ProjectName}-infra
                 TemplatePath: InfraTemplateValidationOutput::infra.yaml
-                ParameterOverrides: !Sub |
-                  {
-                    "Environment": "${Environment}",
-                    "ProjectName": "${ProjectName}",
-                    "ContainerPort": "${ContainerPort}",
-                    "VPCBlock": "${VPCBlock}",
-                    "PublicSubnet1Block": "${PublicSubnet1Block}",
-                    "PublicSubnet2Block": "${PublicSubnet2Block}",
-                    "PrivateSubnet1Block": "${PrivateSubnet1Block}",
-                    "PrivateSubnet2Block": "${PrivateSubnet2Block}",
-                    "PrivateSubnet3Block": "${PrivateSubnet3Block}",
-                    "PrivateSubnet4Block": "${PrivateSubnet4Block}",
-                  }
+                ParameterOverrides:
+                  Fn::Sub: |
+                    {
+                      "Environment": "${Environment}",
+                      "ProjectName": "${ProjectName}",
+                      "ContainerPort": "${ContainerPort}",
+                      "VPCBlock": "${VPCBlock}",
+                      "PublicSubnet1Block": "${PublicSubnet1Block}",
+                      "PublicSubnet2Block": "${PublicSubnet2Block}",
+                      "PrivateSubnet1Block": "${PrivateSubnet1Block}",
+                      "PrivateSubnet2Block": "${PrivateSubnet2Block}",
+                      "PrivateSubnet3Block": "${PrivateSubnet3Block}",
+                      "PrivateSubnet4Block": "${PrivateSubnet4Block}"
+                    }
                 Capabilities: CAPABILITY_NAMED_IAM
               InputArtifacts:
                 - Name: InfraTemplateValidationOutput
               RunOrder: 1
+
 
   ArtifactBucket:
     Type: AWS::S3::Bucket
