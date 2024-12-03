@@ -371,24 +371,6 @@ Resources:
                     "PrivateSubnet3Block": "${PrivateSubnet3Block}",
                     "PrivateSubnet4Block": "${PrivateSubnet4Block}",
                   }
-                # StackTags: !Sub |
-                #   {
-                #     "Environment": "${Environment}",
-                #     "Project": "${ProjectName}",
-                #     "Team": "${Team}",
-                #     "CostCenter": "${CostCenter}",
-                #     "Owner": "${Owner}",
-                #     "ManagedBy": "CloudFormation",
-                #     "CreatedBy": "CodePipeline"
-                #   }
-                StackTags:
-                  Environment: !Ref Environment 
-                  ProjectName: !Ref ProjectName 
-                  Team: !Ref Team 
-                  CostCenter: !Ref CostCenter 
-                  Owner: !Ref Owner 
-                  ManagedBy: CloudFormation 
-                  CreatedBy: CodePipeline
                 Capabilities: CAPABILITY_NAMED_IAM
               InputArtifacts:
                 - Name: InfraTemplateValidationOutput
