@@ -66,6 +66,14 @@ jobs:
               Team=$Team \
               CostCenter=$CostCenter \
               Owner="$Owner"
+            --tags \
+              Environment=$ENVIRONMENT \
+              Project=$PROJECT_NAME \
+              Team=$Team \
+              CostCenter=$CostCenter \
+              Owner="$Owner" \
+              ManagedBy=CloudFormation \
+              CreatedBy=GitHub
       
       # Verify CloudFormation Stack Success
       - name: Verify deployment
