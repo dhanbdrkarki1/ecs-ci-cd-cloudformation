@@ -11,7 +11,7 @@ services:
   blog-web:
     build: .
     entrypoint: "./entrypoint.sh"
-    command: ["uwsgi", "--ini", "uwsgi.ini"]
+    command: ["uwsgi", "--ini", "/code/config/uwsgi/uwsgi.ini"]
 
     restart: always
     # volumes: 
@@ -19,39 +19,29 @@ services:
     ports:
       - 8000:8000
     environment:
-      # - DJANGO_SETTINGS_MODULE=blog.settings.prod
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
+      # Django Settings Module
+      - DJANGO_SETTINGS_MODULE=blog
+      # Debug Mode
+      - DEBUG_STATUS=True 
+      # Django Secret Key
+      - DJANGO_SECRET_KEY=dhanbdrkarki-is-deploying-django-haha6u=jl$hz*4cc!63m#vg0k0%(j%0lp#o9d4$g_o+#mg2eg-*$66
+      # Allowed Hosts
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      # DB Environment
+      - DB_NAME=blogdb
+      - DB_USER=admin
+      - DB_PASSWORD=admin
+      - DB_HOST=db
+      - DB_PORT=5432
+      # Django SuperUser
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_PASSWORD=admin
+      - DJANGO_SUPERUSER_EMAIL=admin@gmail.com
+      # Email Settings
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_USE_TLS=True
+      - EMAIL_HOST_USER=your_email@gmail.com
+      - EMAIL_HOST_PASSWORD=your_app_specific_password
     depends_on:
       - db
-
-  # blog-web:
-  #   build: .
-  #   entrypoint: "./entrypoint.sh"
-  #   command: ["./wait-for-it.sh", "db:5432", "--", "uwsgi", "--ini", "/code/config/uwsgi/uwsgi.ini"]
-  #   restart: always
-  #   volumes: 
-  #     - .:/code
-  #   ports:
-  #     - 8000:8000
-  #   environment:
-  #     # - DJANGO_SETTINGS_MODULE=blog.settings.prod
-  #     - POSTGRES_DB=postgres
-  #     - POSTGRES_USER=postgres
-  #     - POSTGRES_PASSWORD=postgres
-  #     - POSTGRES_HOST=db
-  #     - POSTGRES_PORT=5432
-  #   depends_on:
-  #     - db
-
-  # nginx:
-  #   image: nginx:latest
-  #   restart: always
-  #   volumes:
-  #     - ./config/nginx:/etc/nginx/templates
-  #     - .:/code
-  #   ports:
-  #     - "80:80"
