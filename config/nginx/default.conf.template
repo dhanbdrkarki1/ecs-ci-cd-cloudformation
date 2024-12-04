@@ -1,0 +1,26 @@
+# upstream for uWSGI
+upstream uwsgi_app {
+    server unix:/code/uwsgi_app.sock;
+}
+
+server {
+    listen 80;
+    server_name _;
+    
+    #access and error logs
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    location / {
+        include /etc/nginx/uwsgi_params;
+        uwsgi_pass uwsgi_app;
+    }
+
+    location /static/ {
+        alias /code/static/;
+    }
+
+    location /images/ {
+        alias /code/static/images/;
+    }
+}

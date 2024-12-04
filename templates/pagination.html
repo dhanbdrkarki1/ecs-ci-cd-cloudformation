@@ -1,0 +1,29 @@
+<ul class="page-numbers">
+    {% if page.has_previous %}
+    <li>
+        <a href="?page={{page.previous_page_number}}"><i class="fa fa-angle-double-left"></i></a>
+    </li>
+    {% else %}
+    <li class=" disabled">
+        <a href="#" tableindex="-1" aria-disabled="true"><i class="fa fa-angle-double-left"></i></a>
+    </li>
+    {% endif %}
+
+    {% for i in page.paginator.page_range %}
+    {% if i == page.number %}
+    <li class="active"><a>{{i}}</a></li>
+    {% else %}
+    <li><a href="?page={{i}}">{{i}}</a></li>
+    {% endif %}
+    {% endfor %}
+
+    {% if page.has_next %}
+    <li>
+        <a href="?page={{ page.next_page_number }}"><i class="fa fa-angle-double-right"></i></a>
+    </li>
+    {% else %}
+    <li class="disabled">
+        <a href="#" tableindex="-1" aria-disabled="true"><i class="fa fa-angle-double-right"></i></a>
+    </li>
+    {% endif %}
+</ul>

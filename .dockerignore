@@ -1,0 +1,15 @@
+.git/
+.vscode/
+venv/
+htmlcov/
+__pycache__/
+
+.coverage
+.docker/Dockerfile
+.*ignore
+.env*
+# db.sqlite3
+*.yml
+*.yaml
+*.md
+*.cfg

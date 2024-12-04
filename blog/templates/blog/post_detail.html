@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load blog_tags %}
+{% load humanize %}
+{% load social_share %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+
+<!-- Page Content -->
+<!-- Banner Starts Here -->
+<div class="heading-page header-text">
+    <section class="page-heading">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="text-content">
+                        <h4>Post Details</h4>
+                        <h2>Single blog post</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Banner Ends Here -->
+
+<section class="blog-posts grid-system">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="all-blog-posts">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="blog-post">
+                                <div class="blog-thumb">
+                                    <img src="{{ post.image.url }}" alt="{{ post.title }}">
+                                </div>
+                                <div class="down-content">
+                                    <a href="{{ request.build_absolute_uri }}">
+                                        <h4>{{ post.title }}</h4>
+                                    </a>
+                                    <ul class="post-info">
+                                        <li><a href="#">{{ post.author|capfirst }}</a></li>
+                                        <li><a href="#">{{ post.publish|naturalday }}</a></li>
+                                        <li><a href="#">{{ post.comments.count }} comment{{ post.comments.count|pluralize }}</a></li>
+                                    </ul>
+                                    <p>{{ post.body }}</p>
+                                    <div class="post-options">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <ul class="post-tags">
+                                                    <li><i class="fa fa-tags"></i></li>
+                                                    {% for tag in post.tags.all %}
+                                                        <li>
+                                                            <a href="{% url 'blog:post_list_by_tag' tag.slug %}">
+                                                            {{ tag.name }}
+                                                        </a>
+                                                        </li>
+                                                        {% if not forloop.last %}, {% endif %}
+                                                    {% endfor %}
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-6">
+                                                <ul class="post-share">
+                                                    <li><i class="fa fa-share-alt"></i></li>
+                                                    <li>{% post_to_facebook object_or_url "<p>Facebook</p>" %}</li>
+                                                    <li>{% post_to_linkedin object_or_url %},</li>
+                                                    <li>{% post_to_twitter 'Share this' object_or_url "<p>Twitter</p>" %}</li>
+                                                    <li><a href="{% url 'blog:post_share' post.id %}">
+                                                            Gmail
+                                                    </a>,</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="sidebar-item comments">
+                                <div class="sidebar-heading">
+                                    {% with total_comments=comments.count %}
+                                    <h2>
+                                        {{ total_comments }} comment{{ total_comments|pluralize}}
+                                    </h2>
+                                    {% endwith %}
+                                </div>
+                                <div class="content">
+                                    <ul>
+                                        {% for comment in comments %}
+                                            <li>
+                                                <div class="author-thumb">
+                                                    <img src="assets/images/comment-author-01.jpg" alt="">
+                                                </div>
+                                                <div class="right-content">
+                                                    <h4>{{ comment.name}} <span> {{ comment.created }}</span></h4>
+                                                    <p>{{ comment.body|linebreaks }}</p>
+                                                </div>
+                                            </li>
+                                        {% empty %}
+                                        <p>There are no comments.</p>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                    {% include 'blog/comment_form.html' %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="sidebar">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="sidebar-item search">
+                                <form id="search_form" name="gs" method="GET" action="#">
+                                    <input type="text" name="q" class="searchText" placeholder="type to search..."
+                                        autocomplete="on">
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="sidebar-item recent-posts">
+                                <div class="sidebar-heading">
+                                    <h2>Recommended Posts</h2>
+                                </div>
+                                <div class="content">
+              
+                                    <ul>
+                                        {% for post in similar_posts %}
+                                            <li>
+                                                <a href="{{ post.get_absolute_url }}">
+                                                    <h5>{{ post.title }}</h5>
+                                                    <span>{{ post.publish|naturalday }}</span>
+                                                </a>
+                                            </li>
+                                        {% empty %}
+                                        <p>There are no similar posts yet.</p>
+                                        {% endfor %}
+
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-12">
+                            <div class="sidebar-item tags">
+                                <div class="sidebar-heading">
+                                    <h2>Tag Clouds</h2>
+                                </div>
+                                <div class="content">
+                                    <ul>
+                                        {% for tag in all_tags %}
+                                        <li>
+                                            <a href="{% url 'blog:post_list_by_tag' tag.slug %}">
+                                                {{ tag.name|title }}
+                                            </a>
+                                        </li>
+                                        
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
