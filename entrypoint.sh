@@ -31,11 +31,11 @@ from psycopg2.errors import OperationalError
 
 try:
     psycopg2.connect(
-        dbname="${POSTGRES_DB}",
-        user="${POSTGRES_USER}",
-        password="${POSTGRES_PASSWORD}",
-        host="${POSTGRES_HOST}",
-        port="${POSTGRES_PORT}",
+        dbname="${DB_NAME}",
+        user="${DB_USER}",
+        password="${DB_PASSWORD}",
+        host="${DB_HOST}",
+        port="${DB_PORT}",
         connect_timeout=5
     )
 except OperationalError:
