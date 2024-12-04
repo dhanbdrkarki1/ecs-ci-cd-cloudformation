@@ -49,8 +49,6 @@ ARG GROUP_NAME=test
 ARG USER_UID=1000
 ARG USER_GID=${USER_UID}
 
-ENV DJANGO_SETTINGS_MODULE=blogsite.settings
-
 # Install runtime dependencies (excluding build tools)
 RUN apk add --no-cache postgresql-libs libjpeg libpng pcre curl bash dos2unix
 
@@ -65,12 +63,10 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy the application code
 COPY --chown=${USER_NAME}:${GROUP_NAME} . .
 
-# Ensure the script has correct line endings and is executable
-RUN dos2unix entrypoint.sh && \
-    chmod +x entrypoint.sh
-
 # Use the non-root user to run the app
 USER ${USER_NAME}:${GROUP_NAME}
+
+RUN chmod +x entrypoint.sh
 
 # Expose the port
 EXPOSE 8000
@@ -80,4 +76,4 @@ ENTRYPOINT ["./entrypoint.sh"]
 
 # uWSGI Server
 # (Optional) Comment below line while using docker compose.
-CMD ["uwsgi", "--ini", "/code/config/uwsgi/uwsgi.ini"]
+# CMD ["uwsgi", "--ini", "/usr/src/app/config/uwsgi/uwsgi.ini"]

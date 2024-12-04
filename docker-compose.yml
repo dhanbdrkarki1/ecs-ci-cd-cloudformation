@@ -5,29 +5,33 @@ services:
     volumes:
       - /data/db:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=blogdb
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    networks:
+      - blog-network
+
   blog-web:
     build: .
     entrypoint: "./entrypoint.sh"
-    command: ["uwsgi", "--ini", "/code/config/uwsgi/uwsgi.ini"]
+    command: ["uwsgi", "--ini", "/usr/src/app/config/uwsgi/uwsgi.ini"]
 
     restart: always
-    # volumes: 
-    #   - .:/code
+    volumes: 
+      - .:/usr/src/app
     ports:
       - 8000:8000
     environment:
       # Django Settings Module
-      - DJANGO_SETTINGS_MODULE=blog
+      - DJANGO_SETTINGS_MODULE=blogsite.settings
       # Debug Mode
       - DEBUG_STATUS=True 
       # Django Secret Key
-      - DJANGO_SECRET_KEY=dhanbdrkarki-is-deploying-django-haha6u=jl$hz*4cc!63m#vg0k0%(j%0lp#o9d4$g_o+#mg2eg-*$66
+      - DJANGO_SECRET_KEY="dhanbdrkarki-is-deploying-django-haha6u"
       # Allowed Hosts
       - ALLOWED_HOSTS=localhost,127.0.0.1
       # DB Environment
+      - DB_ENGINE=django.db.backends.postgresql
       - DB_NAME=blogdb
       - DB_USER=admin
       - DB_PASSWORD=admin
@@ -45,3 +49,22 @@ services:
       - EMAIL_HOST_PASSWORD=your_app_specific_password
     depends_on:
       - db
+    networks:
+      - blog-network
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    volumes: 
+      - ./config/nginx:/etc/nginx/templates
+      - .:/usr/src/app
+    ports:
+      - 80:80
+    depends_on:
+      - blog-web
+    networks:
+      - blog-network
+
+networks:
+  blog-network:
+    driver: bridge

@@ -1,12 +1,8 @@
 #!/bin/bash
 
-# ensures that the script exits immediately if any command exits with a non-zero status (i.e., an error).
 set -o errexit
-# ensures that if any command in a pipeline fails, the whole pipeline fails.
 set -o pipefail
-# ensures that any attempts to use an undefined variable will cause the script to exit.
 set -o nounset
-# useful for debugging, print each command before executing it.
 set -o xtrace
 
 # Define logging functions
@@ -43,12 +39,29 @@ except OperationalError:
 END
 }
 
+# Add maximum retry attempts
+MAX_RETRIES=30
+RETRY_COUNT=0
+
+# Wait for PostgreSQL with a timeout
+log_info "Waiting for PostgreSQL to become available..."
+until postgres_ready; do
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        log_error "Failed to connect to PostgreSQL after $MAX_RETRIES attempts. Exiting..."
+        exit 1
+    fi
+    log_warn "PostgreSQL is unavailable - sleeping for 5 seconds (Attempt $RETRY_COUNT/$MAX_RETRIES)"
+    sleep 5
+done
+log_info "PostgreSQL is available"
+
 # Handle database migrations
 handle_migrations() {
     log_info "Running database migrations..."
     
     # Run makemigrations first
-    if ! python3 manage.py makemigrations --noinput; then
+    if ! python3 manage.py makemigrations blog --noinput; then
         log_error "Failed to make migrations"
         exit 1
     fi
@@ -91,13 +104,7 @@ exit(0 if exists else 1)
     fi
 }
 
-until postgres_ready; do
-  >&2 echo "Waiting for PostgreSQL to become available..."
-  sleep 5
-done
->&2 echo "PostgreSQL is available"
-
 handle_migrations
-create_superuser
+# create_superuser
 
 exec "$@"
