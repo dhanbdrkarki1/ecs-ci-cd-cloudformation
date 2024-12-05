@@ -12,7 +12,9 @@ services:
       - blog-network
 
   blog-web:
-    build: .
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
     entrypoint: "./entrypoint.sh"
     command: ["uwsgi", "--ini", "/usr/src/app/config/uwsgi/uwsgi.ini"]
 
@@ -23,9 +25,9 @@ services:
       - 8000:8000
     environment:
       # Django Settings Module
-      - DJANGO_SETTINGS_MODULE=blogsite.settings
+      - DJANGO_SETTINGS_MODULE=blogsite.settings.local
       # Debug Mode
-      - DEBUG_STATUS=True 
+      - DEBUG_STATUS=False 
       # Django Secret Key
       - DJANGO_SECRET_KEY="dhanbdrkarki-is-deploying-django-haha6u"
       # Allowed Hosts
@@ -48,8 +50,8 @@ services:
       - EMAIL_HOST_USER=your_email@gmail.com
       - EMAIL_HOST_PASSWORD=your_app_specific_password
       # Amazon S3
-      - AWS_ACCESS_KEY_ID=
-      - AWS_SECRET_ACCESS_KEY=
+      - AWS_ACCESS_KEY_ID=AKIA35AJCH6XTDMHUHFI
+      - AWS_SECRET_ACCESS_KEY=3KX9sffQbHd1G9vLLlHmwMZsnSaACFYW0rICNuPt
       - AWS_STORAGE_BUCKET_NAME=dhan-django-blog-test  
       - AWS_S3_REGION_NAME=us-east-1
     depends_on:
