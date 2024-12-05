@@ -558,50 +558,106 @@ Resources:
           Value: !Sub ${ProjectName}-${Environment}
 
 
+  ##################################
+  ## Parameters in Parameter Store
+  ##################################
+
+  DBNameParameter:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/${ProjectName}/${Environment}/database/name'
+      Description: 'Database name'
+      Type: 'String'
+      Value: 'blogdb'
+
+  DBUsernameParameter:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/${ProjectName}/${Environment}/database/username'
+      Description: 'Database master username'
+      Type: 'String'
+      Value: 'admin'
+
+  DBPasswordParameter:
+    Type: 'AWS::SSM::Parameter'
+    Properties:
+      Name: !Sub '/${ProjectName}/${Environment}/database/password'
+      Description: 'Database master password'
+      Type: 'SecureString'
+      Value: 'Password0'
+
+  ##################################
   # # Database
-  # # Security group for RDS
-  # RDSSecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties:
-  #     GroupDescription: Security group for RDS
-  #     VpcId: !Ref VPC
-  #     SecurityGroupIngress:
-  #       - IpProtocol: tcp
-  #         FromPort: 5432
-  #         ToPort: 5432
-  #         SourceSecurityGroupId: !Ref ECSSecurityGroup
-  #     SecurityGroupEgress:
-  #       - IpProtocol: -1
-  #         CidrIp: 0.0.0.0/0
+  ##################################
+
+  # Security group for RDS
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for RDS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
 
   # # RDS Subnet Group
-  # DBSubnetGroup:
-  #   Type: AWS::RDS::DBSubnetGroup
-  #   Properties:
-  #     DBSubnetGroupDescription: Subnet group for RDS
-  #     SubnetIds:
-  #       - !Ref PrivateSubnet3
-  #       - !Ref PrivateSubnet4
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub ${NamePrefix}-db-subnet-group
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS
+      SubnetIds:
+        - !Ref PrivateSubnet3
+        - !Ref PrivateSubnet4
+      Tags:
+        - Key: Name
+          Value: !Sub ${NamePrefix}-db-subnet-group
 
   # # RDS Database Instance
-  # RDSInstance:
-  #   Type: AWS::RDS::DBInstance
-  #   Properties:
-  #     Engine: postgres
-  #     EngineVersion: '16.3'
-  #     DBInstanceClass: db.t3.micro
-  #     AllocatedStorage: '20'
-  #     DBSubnetGroupName: !Ref DBSubnetGroup
-  #     VPCSecurityGroups:
-  #       - !Ref RDSSecurityGroup
-  #     DBName: blogdb
-  #     MasterUsername: mydbuser
-  #     MasterUserPassword: Password0
-  #     MultiAZ: true
-  #     PubliclyAccessible: false
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: '16.3'
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: '20'
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      DBName: !Ref DBNameParameter
+      MasterUsername: !Ref DBUsernameParameter
+      MasterUserPassword: !Ref DBPasswordParameter
+      MultiAZ: true
+      PubliclyAccessible: false
+
+# IAM Role for accessing Parameter Store
+  RDSParameterStoreRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: rds.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+      Policies:
+        - PolicyName: ParameterStoreAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource:
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/*'
 
 Outputs:
   ALBEndpoint:
