@@ -16,7 +16,6 @@ Parameters:
   ContainerPort:
     Type: Number
     Description: Container port
-    Default: 3000
 
   # VPC Params
   VPCBlock:
@@ -302,15 +301,73 @@ Resources:
         - !GetAtt VPCEndpointSecurityGroup.GroupId
 
   # S3 Gateway endpoint for ECR
-  S3VPCEndpoint:
+  # S3VPCEndpoint:
+  #   Type: AWS::EC2::VPCEndpoint
+  #   Properties:
+  #     ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+  #     VpcId: !Ref VPC
+  #     RouteTableIds:
+  #       - !Ref PrivateRouteTable1
+  #       - !Ref PrivateRouteTable2
+  #     VpcEndpointType: Gateway
+
+  # VPC Gateway Endpoint for S3
+  S3GatewayEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
       VpcId: !Ref VPC
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcEndpointType: Gateway
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt StaticFilesBucket.Arn
+              - !Sub ${StaticFilesBucket.Arn}/*
       RouteTableIds:
         - !Ref PrivateRouteTable1
         - !Ref PrivateRouteTable2
-      VpcEndpointType: Gateway
+
+  #######################
+  # Amazon S3
+  #######################
+  # S3 Bucket for Static Files
+  StaticFilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${ProjectName}-${Environment}-static-files
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, HEAD]
+            AllowedOrigins: ['*']  # In production, restrict to your domain
+            MaxAge: 3600
+
+  # Bucket Policy for Public Read Access
+  StaticFilesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticFilesBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub ${StaticFilesBucket.Arn}/*
 
   # Security Groups
   ALBSecurityGroup:
@@ -392,6 +449,11 @@ Resources:
       Port: 80
       Protocol: HTTP
 
+
+  ##################################
+  # Elastic Container Service
+  ##################################
+
   # ECS Cluster and IAM Roles
   ECSCluster:
     Type: AWS::ECS::Cluster
@@ -407,6 +469,7 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-cluster
 
+  # ECS Execution Role
   ECSExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -435,10 +498,21 @@ Resources:
                   - ecr:DescribeImages
                   - ecr:BatchGetImage
                 Resource: '*'
+        - PolicyName: ParameterStoreAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameters
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/*
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-execution-role
 
+  # ECS Task Role to allow S3 access
   ECSApplicationTaskRole:
     Type: AWS::IAM::Role
     Properties:
@@ -450,22 +524,25 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
-      # Policies:
-      #   - PolicyName: !Sub "${ProjectName}-${Environment}-TaskPolicy"
-      #     PolicyDocument:
-      #       Version: '2012-10-17'
-      #       Statement:
-      #         - Effect: Allow
-      #           Action:
-      #             - 'logs:CreateLogStream'
-      #             - 'logs:PutLogEvents'
-      #           Resource: '*'
-      # ManagedPolicyArns:
-      #   - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt StaticFilesBucket.Arn
+                  - !Sub ${StaticFilesBucket.Arn}/*
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-app-role
 
+  # Cloudwatch log group for ECS
   ECSCloudWatchLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -504,6 +581,37 @@ Resources:
           #   StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
           Memory: 512
           MemoryReservation: 256
+
+          Environment:
+            - Name: ENVIRONMENT
+              Value: !Ref Environment
+            - Name: PROJECT_NAME
+              Value: !Ref ProjectName
+            - Name: AWS_STORAGE_BUCKET_NAME
+              Value: !Ref StaticFilesBucket
+            - Name: AWS_S3_REGION_NAME
+              Value: !Ref AWS::Region
+          Secrets:
+            # Database credentials
+            - Name: DB_NAME
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/name
+            - Name: DB_USER
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/username
+            - Name: DB_PASSWORD
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/password
+            # Django settings
+            - Name: DJANGO_SECRET_KEY
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/secret_key
+            - Name: DJANGO_ALLOWED_HOSTS
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/allowed_hosts
+            # Django superuser
+            - Name: DJANGO_SUPERUSER_USERNAME
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/superuser/username
+            - Name: DJANGO_SUPERUSER_PASSWORD
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/superuser/password
+            - Name: DJANGO_SUPERUSER_EMAIL
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/superuser/email
+
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -557,35 +665,6 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}
 
-
-  ##################################
-  ## Parameters in Parameter Store
-  ##################################
-
-  DBNameParameter:
-    Type: 'AWS::SSM::Parameter'
-    Properties:
-      Name: !Sub '/${ProjectName}/${Environment}/database/name'
-      Description: 'Database name'
-      Type: 'String'
-      Value: 'blogdb'
-
-  DBUsernameParameter:
-    Type: 'AWS::SSM::Parameter'
-    Properties:
-      Name: !Sub '/${ProjectName}/${Environment}/database/username'
-      Description: 'Database master username'
-      Type: 'String'
-      Value: 'admin'
-
-  DBPasswordParameter:
-    Type: 'AWS::SSM::Parameter'
-    Properties:
-      Name: !Sub '/${ProjectName}/${Environment}/database/password'
-      Description: 'Database master password'
-      Type: 'SecureString'
-      Value: 'Password0'
-
   ##################################
   # # Database
   ##################################
@@ -604,6 +683,9 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}
 
   # # RDS Subnet Group
   DBSubnetGroup:
@@ -615,7 +697,7 @@ Resources:
         - !Ref PrivateSubnet4
       Tags:
         - Key: Name
-          Value: !Sub ${NamePrefix}-db-subnet-group
+          Value: !Sub ${ProjectName}-${Environment}
 
   # # RDS Database Instance
   RDSInstance:
@@ -628,11 +710,14 @@ Resources:
       DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups:
         - !Ref RDSSecurityGroup
-      DBName: !Ref DBNameParameter
-      MasterUsername: !Ref DBUsernameParameter
-      MasterUserPassword: !Ref DBPasswordParameter
+      DBName: '{{resolve:ssm:/${ProjectName}/${Environment}/database/name}}'
+      MasterUsername: '{{resolve:ssm:/${ProjectName}/${Environment}/database/username}}'
+      MasterUserPassword: '{{resolve:ssm-secure:/${ProjectName}/${Environment}/database/password}}'
       MultiAZ: true
       PubliclyAccessible: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}
 
 # IAM Role for accessing Parameter Store
   RDSParameterStoreRole:
@@ -658,6 +743,9 @@ Resources:
                   - ssm:GetParameters
                 Resource:
                   - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/*'
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}
 
 Outputs:
   ALBEndpoint:

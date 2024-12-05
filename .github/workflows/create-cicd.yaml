@@ -14,10 +14,18 @@ jobs:
       ENVIRONMENT: dev
       PROJECT_NAME: ecs-app
       ECS_CONTAINER_NAME: ecs-app
-      DOCKER_FILE_PATH: ./Dockerfile
-      CONTAINER_PORT: 3000
+      DOCKER_FILE_PATH: ./Dockerfile.prod
+      CONTAINER_PORT: 8000
       CLOUDFORMATION_CICD_TEMPLATE_FILE: cicd.yaml
       PipelineApproverEmail: dhanbdrkarki111@gmail.com
+      # Django Application Settings
+      DJANGO_SETTINGS_MODULE=blogsite.settings.prod
+      DEBUG_STATUS=False
+      ALLOWED_HOSTS=*  
+      # Django SuperUser
+      DJANGO_SUPERUSER_USERNAME=admin
+      DJANGO_SUPERUSER_PASSWORD=admin
+      DJANGO_SUPERUSER_EMAIL=admin@gmail.com    
 
     steps:
       # Checkout code from the repository
@@ -41,6 +49,72 @@ jobs:
       - name: Lint CloudFormation template
         run: |
           cfn-lint cicd.yaml infra.yaml
+
+      # Create Parameter Store parameters
+      - name: Create SSM Parameters
+        run: |
+          # Database credentials
+          aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/database/username" \
+            --value "${{ secrets.DB_USERNAME }}" \
+            --type "String" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/database/password" \
+            --value "${{ secrets.DB_PASSWORD }}" \
+            --type "SecureString" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/database/name" \
+            --value "${{ secrets.DB_NAME }}" \
+            --type "String" \
+            --overwrite
+
+          # Django settings
+          aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/app/secret_key" \
+            --value "${{ secrets.DJANGO_SECRET_KEY }}" \
+            --type "SecureString" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/app/debug_status" \
+            --value "${{ secrets.DEBUG_STATUS }}" \
+            --type "String" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/app/django_settings_module" \
+            --value "${{ secrets.DJANGO_SETTINGS_MODULE }}" \
+            --type "String" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/app/allowed_hosts" \
+            --value "${{ secrets.DJANGO_ALLOWED_HOSTS }}" \
+            --type "String" \
+            --overwrite
+
+          # Django superuser
+          aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/app/superuser/username" \
+            --value "${{ secrets.DJANGO_SUPERUSER_USERNAME }}" \
+            --type "String" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/app/superuser/password" \
+            --value "${{ secrets.DJANGO_SUPERUSER_PASSWORD }}" \
+            --type "SecureString" \
+            --overwrite
+
+          aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/app/superuser/email" \
+            --value "${{ secrets.DJANGO_SUPERUSER_EMAIL }}" \
+            --type "String" \
+            --overwrite
 
       # Deploy CloudFormation Stack
       - name: Deploy CloudFormation Stack
