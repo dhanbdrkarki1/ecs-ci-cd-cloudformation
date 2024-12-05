@@ -56,6 +56,17 @@ until postgres_ready; do
 done
 log_info "PostgreSQL is available"
 
+# static files handling
+handle_static() {
+    log_info "Collecting static files..."
+    
+    if ! python3 manage.py collectstatic --noinput -v 2; then
+        log_error "Failed to collect static files"
+        exit 1
+    fi
+    log_info "Static files collected successfully"
+}
+
 # Handle database migrations
 handle_migrations() {
     log_info "Running database migrations..."
@@ -80,31 +91,28 @@ create_superuser() {
     if [ ! -z "$DJANGO_SUPERUSER_USERNAME" ] && [ ! -z "$DJANGO_SUPERUSER_PASSWORD" ] && [ ! -z "$DJANGO_SUPERUSER_EMAIL" ]; then
         log_info "Checking if superuser exists..."
         
-        # Check if superuser exists using Django shell
-        python3 manage.py shell -c "
+        # Check if superuser exists using a simpler approach
+        SUPERUSER_EXISTS=$(python3 manage.py shell -c "
 from django.contrib.auth import get_user_model
 User = get_user_model()
-exists = User.objects.filter(username=\"${DJANGO_SUPERUSER_USERNAME}\").exists()
-exit(0 if exists else 1)
-"
+print(User.objects.filter(username='${DJANGO_SUPERUSER_USERNAME}').exists())
+")
         
-        if [ $? -eq 1 ]; then
+        if [ "$SUPERUSER_EXISTS" = "True" ]; then
+            log_info "Superuser ${DJANGO_SUPERUSER_USERNAME} already exists"
+        else
             log_info "Creating superuser..."
             python3 manage.py createsuperuser --noinput
-            if [ $? -eq 0 ]; then
-                log_info "Superuser created successfully"
-            else
-                log_warn "Failed to create superuser"
-            fi
-        else
-            log_info "Superuser already exists, skipping creation"
+            log_info "Superuser created successfully"
         fi
     else
-        log_warn "Superuser environment variables not set, skipping superuser creation"
+        log_warn "Superuser environment variables not set"
     fi
 }
 
+
+handle_static
 handle_migrations
-# create_superuser
+create_superuser
 
 exec "$@"
