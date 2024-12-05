@@ -2,14 +2,10 @@ const navContainer = document.querySelector('nav');
 const navMenu = document.querySelector('.navbar-nav');
 const navLinks = document.querySelectorAll('.nav-link');
 
-console.log(navMenu);
-
 navLinks.forEach((navLink) => {
-  console.log(navLink);
   navLink.addEventListener(
     'click',
     (e) => {
-      console.log('clicked');
       navLink.classList.remove('active');
 
       //change tab on click

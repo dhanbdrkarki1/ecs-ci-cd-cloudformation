@@ -3,6 +3,8 @@ var i = 0;
 
 function counterEffect() {
   const counterContainer = document.querySelector('.circles');
+  // Add null check for counterContainer
+  if (!counterContainer) return;
   const counterContainerPostion = counterContainer.getBoundingClientRect().top;
   const screenPostion = window.innerHeight / 1.8;
   console.log(counterContainerPostion);
@@ -65,6 +67,8 @@ const elements = [
 
 elements.forEach((element) => {
   function scrollEffect() {
+    if (!element) return;
+
     var elementPostion = element.getBoundingClientRect().top;
     var screenPostion = window.innerHeight;
 
