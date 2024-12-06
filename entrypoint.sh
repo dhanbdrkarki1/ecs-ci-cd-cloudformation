@@ -18,8 +18,13 @@ log_warn() {
     echo "[WARN] $1" >&2
 }
 
+log_debug() {
+    echo "[DEBUG] $1"
+}
+
 # checking Health of dependent services
 postgres_ready() {
+    log_debug "Attempting to connect to PostgreSQL at ${DB_HOST}:${DB_PORT}"
     python << END
 import sys
 import psycopg2
@@ -44,17 +49,17 @@ MAX_RETRIES=30
 RETRY_COUNT=0
 
 # Wait for PostgreSQL with a timeout
-log_info "Waiting for PostgreSQL to become available..."
-until postgres_ready; do
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-        log_error "Failed to connect to PostgreSQL after $MAX_RETRIES attempts. Exiting..."
-        exit 1
-    fi
-    log_warn "PostgreSQL is unavailable - sleeping for 5 seconds (Attempt $RETRY_COUNT/$MAX_RETRIES)"
-    sleep 5
-done
-log_info "PostgreSQL is available"
+# log_info "Waiting for PostgreSQL to become available..."
+# until postgres_ready; do
+#     RETRY_COUNT=$((RETRY_COUNT + 1))
+#     if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+#         log_error "Failed to connect to PostgreSQL after $MAX_RETRIES attempts. Exiting..."
+#         exit 1
+#     fi
+#     log_warn "PostgreSQL is unavailable - sleeping for 5 seconds (Attempt $RETRY_COUNT/$MAX_RETRIES)"
+#     sleep 5
+# done
+# log_info "PostgreSQL is available"
 
 # static files handling
 handle_static() {
