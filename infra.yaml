@@ -317,12 +317,15 @@ Resources:
           ToPort: !Ref ContainerPort
           SourceSecurityGroupId: !Ref ALBSecurityGroup
           Description: Allow ecs task access from load balancer
+      # SecurityGroupEgress:
+      #   - IpProtocol: tcp
+      #     FromPort: 443
+      #     ToPort: 443
+      #     CidrIp: 0.0.0.0/0
+      #     Description: Allow HTTPS egress
       SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
+        - IpProtocol: -1
           CidrIp: 0.0.0.0/0
-          Description: Allow HTTPS egress
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-sg
