@@ -326,6 +326,7 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+          Description: Allow Explict outbound access
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-sg

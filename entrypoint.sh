@@ -22,6 +22,17 @@ log_debug() {
     echo "[DEBUG] $1"
 }
 
+# Show Django version and settings
+log_debug "Django version:"
+python3 -m django --version
+log_debug "Using settings module: ${DJANGO_SETTINGS_MODULE}"
+
+log_debug "Database connection details:"
+log_debug "DB_HOST: ${DB_HOST}"
+log_debug "DB_PORT: ${DB_PORT}"
+log_debug "DB_NAME: ${DB_NAME}"
+log_debug "DB_USER: ${DB_USER}"
+
 # checking Health of dependent services
 postgres_ready() {
     log_debug "Attempting to connect to PostgreSQL at ${DB_HOST}:${DB_PORT}"
@@ -31,15 +42,18 @@ import psycopg2
 from psycopg2.errors import OperationalError
 
 try:
-    psycopg2.connect(
+    conn = psycopg2.connect(
         dbname="${DB_NAME}",
         user="${DB_USER}",
         password="${DB_PASSWORD}",
         host="${DB_HOST}",
         port="${DB_PORT}",
-        connect_timeout=5
+        connect_timeout=10
     )
-except OperationalError:
+    conn.close()
+    print("Database connection successful!")
+except Exception as e:
+    print(f"Connection failed: {str(e)}", file=sys.stderr)
     sys.exit(-1)
 END
 }
@@ -49,17 +63,20 @@ MAX_RETRIES=30
 RETRY_COUNT=0
 
 # Wait for PostgreSQL with a timeout
-# log_info "Waiting for PostgreSQL to become available..."
-# until postgres_ready; do
-#     RETRY_COUNT=$((RETRY_COUNT + 1))
-#     if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-#         log_error "Failed to connect to PostgreSQL after $MAX_RETRIES attempts. Exiting..."
-#         exit 1
-#     fi
-#     log_warn "PostgreSQL is unavailable - sleeping for 5 seconds (Attempt $RETRY_COUNT/$MAX_RETRIES)"
-#     sleep 5
-# done
-# log_info "PostgreSQL is available"
+log_info "Waiting for PostgreSQL to become available..."
+
+until postgres_ready; do
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        log_error "Failed to connect to PostgreSQL after $MAX_RETRIES attempts. Exiting..."
+        exit 1
+    fi
+    log_info "PostgreSQL is unavailable - sleeping for 5 seconds (Attempt $RETRY_COUNT/$MAX_RETRIES)"
+    sleep 5
+done
+
+log_info "PostgreSQL is available"
+
 
 # static files handling
 handle_static() {
