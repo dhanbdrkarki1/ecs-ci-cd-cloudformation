@@ -607,6 +607,10 @@ Resources:
               Value: !Ref StaticFilesBucket
             - Name: AWS_S3_REGION_NAME
               Value: !Ref AWS::Region
+            - Name: DB_HOST
+              Value: !GetAtt RDSInstance.Endpoint.Address
+            - Name: DB_PORT
+              Value: !GetAtt RDSInstance.Endpoint.Port
           Secrets:
             # Database credentials
             - Name: DB_NAME
