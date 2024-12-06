@@ -253,87 +253,6 @@ Resources:
       SubnetId: !Ref PrivateSubnet4
       RouteTableId: !Ref PrivateRouteTable4
 
-  # dedicated security group for VPC endpoints
-  VPCEndpointSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Security group for VPC Endpoints
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          SourceSecurityGroupId: !Ref ECSSecurityGroup
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: Name
-          Value: !Sub ${ProjectName}-${Environment}-vpc-endpoints-sg
-
-
-  # For ECR Docker Registry
-  ECRDkrVPCEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
-      VpcId: !Ref VPC
-      PrivateDnsEnabled: true
-      VpcEndpointType: Interface
-      SubnetIds:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
-      SecurityGroupIds:
-        - !GetAtt VPCEndpointSecurityGroup.GroupId
-
-  # For ECR API
-  ECRApiVPCEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.api
-      VpcId: !Ref VPC
-      PrivateDnsEnabled: true
-      VpcEndpointType: Interface
-      SubnetIds:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
-      SecurityGroupIds:
-        - !GetAtt VPCEndpointSecurityGroup.GroupId
-
-  # S3 Gateway endpoint for ECR
-  # S3VPCEndpoint:
-  #   Type: AWS::EC2::VPCEndpoint
-  #   Properties:
-  #     ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
-  #     VpcId: !Ref VPC
-  #     RouteTableIds:
-  #       - !Ref PrivateRouteTable1
-  #       - !Ref PrivateRouteTable2
-  #     VpcEndpointType: Gateway
-
-  # VPC Gateway Endpoint for S3
-  S3GatewayEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      VpcId: !Ref VPC
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
-      VpcEndpointType: Gateway
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal: '*'
-            Action:
-              - s3:GetObject
-              - s3:PutObject
-              - s3:DeleteObject
-              - s3:ListBucket
-            Resource:
-              - !GetAtt StaticFilesBucket.Arn
-              - !Sub ${StaticFilesBucket.Arn}/*
-      RouteTableIds:
-        - !Ref PrivateRouteTable1
-        - !Ref PrivateRouteTable2
 
   #######################
   # Amazon S3
@@ -397,9 +316,13 @@ Resources:
           FromPort: !Ref ContainerPort
           ToPort: !Ref ContainerPort
           SourceSecurityGroupId: !Ref ALBSecurityGroup
+          Description: Allow ecs task access from load balancer
       SecurityGroupEgress:
-        - IpProtocol: -1
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
           CidrIp: 0.0.0.0/0
+          Description: Allow HTTPS egress
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-sg
@@ -408,7 +331,7 @@ Resources:
   ALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: MyApplicationALB
+      Name: !Sub ${ProjectName}-${Environment}-alb
       Subnets:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
@@ -454,7 +377,7 @@ Resources:
   # Elastic Container Service
   ##################################
 
-  # ECS Cluster and IAM Roles
+  # ECS Cluster
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
@@ -469,7 +392,102 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-cluster
 
-  # ECS Execution Role
+  # dedicated security group for VPC endpoints
+  VPCEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for VPC Endpoints
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+          Description: HTTPS from ECS tasks
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: Allow HTTPS to AWS services
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-vpc-endpoints-sg
+
+
+  # For ECR Docker Registry
+  ECRDkrVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.dkr
+      VpcId: !Ref VPC
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !GetAtt VPCEndpointSecurityGroup.GroupId
+
+  # For ECR API
+  ECRApiVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ecr.api
+      VpcId: !Ref VPC
+      PrivateDnsEnabled: true
+      VpcEndpointType: Interface
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      SecurityGroupIds:
+        - !GetAtt VPCEndpointSecurityGroup.GroupId
+
+  # S3 Gateway Endpoint (needed for both ECR and static files)
+  S3GatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref VPC
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcEndpointType: Gateway
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # Allow access to ECR bucket
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+              - !Sub arn:aws:s3:::prod-${AWS::Region}-starport-layer-bucket/*
+              - !Sub arn:aws:s3:::prod-${AWS::Region}-starport-layer-bucket
+          # Allow access to application static files
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt StaticFilesBucket.Arn
+              - !Sub ${StaticFilesBucket.Arn}/*
+      RouteTableIds:
+        - !Ref PrivateRouteTable1
+        - !Ref PrivateRouteTable2
+
+  # Cloudwatch log group for ECS
+  ECSCloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /ecs/${ProjectName}
+      RetentionInDays: 30
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-log
+
+  # ECS Execution Role (used by ECS agent to pull images, write logs)
   ECSExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -490,14 +508,22 @@ Resources:
               - Effect: Allow
                 Action:
                   - ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action:
                   - ecr:BatchCheckLayerAvailability
                   - ecr:GetDownloadUrlForLayer
-                  - ecr:GetRepositoryPolicy
-                  - ecr:DescribeRepositories
-                  - ecr:ListImages
-                  - ecr:DescribeImages
                   - ecr:BatchGetImage
-                Resource: '*'
+                Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-repository
+        - PolicyName: CloudWatchLogsAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt ECSCloudWatchLogGroup.Arn
         - PolicyName: ParameterStoreAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -512,7 +538,7 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-execution-role
 
-  # ECS Task Role to allow S3 access
+  # ECS Task Role (used by application code) to allow S3 access
   ECSApplicationTaskRole:
     Type: AWS::IAM::Role
     Properties:
@@ -541,16 +567,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-app-role
-
-  # Cloudwatch log group for ECS
-  ECSCloudWatchLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /ecs/${ProjectName}
-      RetentionInDays: 30
-      Tags:
-        - Key: Name
-          Value: !Sub ${ProjectName}-${Environment}-log
 
   # ECS Task Definition and Service
   ECSTaskDefinition:
@@ -622,11 +638,14 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-task
 
+  # ECS Service
   ECSService:
     Type: AWS::ECS::Service
     DependsOn:
-      - ALB
-      - ALBListener
+    - ALBListener
+    - ECRDkrVPCEndpoint
+    - ECRApiVPCEndpoint
+    - S3GatewayEndpoint
     Properties:
       ServiceName: !Sub ${ProjectName}-service
       Cluster: !Ref ECSCluster
@@ -642,7 +661,7 @@ Resources:
             - !Ref ECSSecurityGroup
           AssignPublicIp: DISABLED
       LoadBalancers:
-        - ContainerName: !Sub ${ProjectName}
+        - ContainerName: !Ref ProjectName
           ContainerPort: !Ref ContainerPort
           TargetGroupArn: !Ref ALBTargetGroup
       DeploymentConfiguration:
@@ -680,6 +699,7 @@ Resources:
           FromPort: 5432
           ToPort: 5432
           SourceSecurityGroupId: !Ref ECSSecurityGroup
+          Description: Allow PostgreSQL access from ECS tasks
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
