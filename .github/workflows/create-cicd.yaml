@@ -17,15 +17,7 @@ jobs:
       DOCKER_FILE_PATH: ./Dockerfile.prod
       CONTAINER_PORT: 8000
       CLOUDFORMATION_CICD_TEMPLATE_FILE: cicd.yaml
-      PipelineApproverEmail: dhanbdrkarki111@gmail.com
-      # Django Application Settings
-      DJANGO_SETTINGS_MODULE=blogsite.settings.prod
-      DEBUG_STATUS=False
-      ALLOWED_HOSTS=*  
-      # Django SuperUser
-      DJANGO_SUPERUSER_USERNAME=admin
-      DJANGO_SUPERUSER_PASSWORD=admin
-      DJANGO_SUPERUSER_EMAIL=admin@gmail.com    
+      PipelineApproverEmail: dhanbdrkarki111@gmail.com  
 
     steps:
       # Checkout code from the repository
