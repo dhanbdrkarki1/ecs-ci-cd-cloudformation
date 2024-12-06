@@ -11,7 +11,7 @@ jobs:
 
     env:
       # GitHub variables that will be used in the workflow
-      ENVIRONMENT: dev
+      ENVIRONMENT: prod
       PROJECT_NAME: ecs-app
       ECS_CONTAINER_NAME: ecs-app
       DOCKER_FILE_PATH: ./Dockerfile.prod
@@ -47,8 +47,14 @@ jobs:
         run: |
           # Database credentials
           aws ssm put-parameter \
+            --name "/${PROJECT_NAME}/${ENVIRONMENT}/database/engine" \
+            --value "${{ secrets.DB_ENGINE }}" \
+            --type "String" \
+            --overwrite
+
+          aws ssm put-parameter \
             --name "/${PROJECT_NAME}/${ENVIRONMENT}/database/username" \
-            --value "${{ secrets.DB_USERNAME }}" \
+            --value "${{ secrets.DB_USER }}" \
             --type "String" \
             --overwrite
 

@@ -270,9 +270,9 @@ Resources:
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders: ['*']
-            AllowedMethods: [GET, HEAD]
+            AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
             AllowedOrigins: ['*']  # In production, restrict to your domain
-            MaxAge: 3600
+            MaxAge: 3000
 
   # Bucket Policy for Public Read Access
   StaticFilesBucketPolicy:
@@ -538,6 +538,19 @@ Resources:
                   - ssm:GetParameter
                 Resource:
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/*
+        - PolicyName: S3StaticFilesAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt StaticFilesBucket.Arn
+                  - !Sub ${StaticFilesBucket.Arn}/*
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-execution-role
@@ -603,20 +616,25 @@ Resources:
           MemoryReservation: 256
 
           Environment:
+              # Project
             - Name: ENVIRONMENT
               Value: !Ref Environment
             - Name: PROJECT_NAME
               Value: !Ref ProjectName
+              # Amazon S3 (static files)
             - Name: AWS_STORAGE_BUCKET_NAME
               Value: !Ref StaticFilesBucket
             - Name: AWS_S3_REGION_NAME
               Value: !Ref AWS::Region
+              # Database
             - Name: DB_HOST
               Value: !GetAtt RDSInstance.Endpoint.Address
             - Name: DB_PORT
               Value: !GetAtt RDSInstance.Endpoint.Port
           Secrets:
             # Database credentials
+            - Name: DB_ENGINE
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/engine
             - Name: DB_NAME
               ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/name
             - Name: DB_USER
@@ -624,9 +642,13 @@ Resources:
             - Name: DB_PASSWORD
               ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/password
             # Django settings
+            - Name: DJANGO_SETTINGS_MODULE
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/django_settings_module
+            - Name: DEBUG_STATUS
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/debug_status
             - Name: DJANGO_SECRET_KEY
               ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/secret_key
-            - Name: DJANGO_ALLOWED_HOSTS
+            - Name: ALLOWED_HOSTS
               ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/allowed_hosts
             # Django superuser
             - Name: DJANGO_SUPERUSER_USERNAME
