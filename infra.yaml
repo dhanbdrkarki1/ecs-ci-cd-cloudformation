@@ -710,9 +710,9 @@ Resources:
       DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups:
         - !Ref RDSSecurityGroup
-      DBName: '{{resolve:ssm:/${ProjectName}/${Environment}/database/name}}'
-      MasterUsername: '{{resolve:ssm:/${ProjectName}/${Environment}/database/username}}'
-      MasterUserPassword: '{{resolve:ssm-secure:/${ProjectName}/${Environment}/database/password}}'
+      DBName: !Sub '{{resolve:ssm:/${ProjectName}/${Environment}/database/name}}'
+      MasterUsername: !Sub '{{resolve:ssm:/${ProjectName}/${Environment}/database/username}}'
+      MasterUserPassword: !Sub '{{resolve:ssm-secure:/${ProjectName}/${Environment}/database/password}}'
       MultiAZ: true
       PubliclyAccessible: false
       Tags:
