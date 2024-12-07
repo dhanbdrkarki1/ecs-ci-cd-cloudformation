@@ -593,8 +593,8 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: '256'
-      Memory: '512'
+      Cpu: '512'
+      Memory: '1024'
       ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn # Role used by ECS infrastructure
       TaskRoleArn: !GetAtt ECSApplicationTaskRole.Arn # Role used by your application
 
@@ -612,8 +612,9 @@ Resources:
             Timeout: 5      # Wait up to 5 seconds for a response
             Retries: 3      # Allow 3 retries before marking unhealthy
             StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
-          Memory: 512
-          MemoryReservation: 256
+          Cpu: 512
+          Memory: 1024
+          MemoryReservation: 512
 
           Environment:
               # Project
