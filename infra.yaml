@@ -358,7 +358,7 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckPort: !Ref ContainerPort
       HealthCheckPath: /health
-      HealthCheckIntervalSeconds: 30
+      HealthCheckIntervalSeconds: 180
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 2
@@ -694,6 +694,7 @@ Resources:
         - ContainerName: !Ref ProjectName
           ContainerPort: !Ref ContainerPort
           TargetGroupArn: !Ref ALBTargetGroup
+      HealthCheckGracePeriodSeconds: 60  # Gives containers time to warm up
       DeploymentConfiguration:
         # run up to twice the desired number of tasks during the deployment process.
         # prevent downtime, as ECS can start new tasks before stopping the old 
