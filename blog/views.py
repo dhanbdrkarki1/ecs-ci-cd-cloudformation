@@ -9,8 +9,12 @@ from django.core.mail import send_mail
 
 from django.views.decorators.http import require_POST
 from taggit.models import Tag
-
+from django.http import HttpResponse
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+
+# Application health check
+def health_check(request):
+    return HttpResponse("OK", status=200)
 
 def home(request):
     recent_posts =  Post.published.order_by('-publish')[:3]

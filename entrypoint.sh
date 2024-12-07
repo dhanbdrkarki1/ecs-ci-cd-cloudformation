@@ -34,13 +34,23 @@ log_debug "DB_NAME: ${DB_NAME}"
 log_debug "DB_USER: ${DB_USER}"
 
 # checking Health of dependent services
-postgres_ready() {
-    log_debug "Attempting to connect to PostgreSQL at ${DB_HOST}:${DB_PORT}"
-    python << END
+check_database_connection() {
+    if [ -z "$DB_ENGINE" ]; then
+        echo "Error: DB_ENGINE is not set. Please set it to 'mysql' or 'postgresql'."
+        exit 1
+    fi
+
+    if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ]; then
+        echo "Error: One or more database environment variables (DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD) are not set."
+        exit 1
+    fi
+
+    echo "Attempting to connect to $DB_ENGINE database at $DB_HOST:$DB_PORT..."
+
+    if [ "$DB_ENGINE" = "django.db.backends.postgresql" ]; then
+        python << END
 import sys
 import psycopg2
-from psycopg2.errors import OperationalError
-
 try:
     conn = psycopg2.connect(
         dbname="${DB_NAME}",
@@ -51,31 +61,55 @@ try:
         connect_timeout=10
     )
     conn.close()
-    print("Database connection successful!")
+    print("PostgreSQL connection successful!")
 except Exception as e:
-    print(f"Connection failed: {str(e)}", file=sys.stderr)
+    print(f"PostgreSQL connection failed: {str(e)}", file=sys.stderr)
     sys.exit(-1)
 END
+    elif [ "$DB_ENGINE" = "django.db.backends.mysql" ]; then
+        python << END
+import sys
+import pymysql
+try:
+    conn = pymysql.connect(
+        database="${DB_NAME}",
+        user="${DB_USER}",
+        password="${DB_PASSWORD}",
+        host="${DB_HOST}",
+        port=int("${DB_PORT}"),
+        connect_timeout=10
+    )
+    conn.close()
+    print("MySQL connection successful!")
+except Exception as e:
+    print(f"MySQL connection failed: {str(e)}", file=sys.stderr)
+    sys.exit(-1)
+END
+    else
+        echo "Error: Unsupported DB_ENGINE. Please set it to 'mysql' or 'postgresql'."
+        exit 1
+    fi
 }
+
 
 # Add maximum retry attempts
 MAX_RETRIES=30
 RETRY_COUNT=0
 
 # Wait for PostgreSQL with a timeout
-log_info "Waiting for PostgreSQL to become available..."
+log_info "Waiting for Database to become available..."
 
-until postgres_ready; do
+until check_database_connection; do
     RETRY_COUNT=$((RETRY_COUNT + 1))
     if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-        log_error "Failed to connect to PostgreSQL after $MAX_RETRIES attempts. Exiting..."
+        log_error "Failed to connect to database after $MAX_RETRIES attempts. Exiting..."
         exit 1
     fi
-    log_info "PostgreSQL is unavailable - sleeping for 5 seconds (Attempt $RETRY_COUNT/$MAX_RETRIES)"
+    log_info "Database is unavailable - sleeping for 5 seconds (Attempt $RETRY_COUNT/$MAX_RETRIES)"
     sleep 5
 done
 
-log_info "PostgreSQL is available"
+log_info "Database is available"
 
 
 # static files handling
