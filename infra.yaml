@@ -357,7 +357,7 @@ Resources:
       HealthCheckEnabled: true
       HealthCheckProtocol: HTTP
       HealthCheckPort: !Ref ContainerPort
-      HealthCheckPath: /health
+      HealthCheckPath: /health/
       HealthCheckIntervalSeconds: 180
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
