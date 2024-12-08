@@ -166,6 +166,7 @@ print(User.objects.filter(username='${DJANGO_SUPERUSER_USERNAME}').exists())
     fi
 }
 
+cat config/uwsgi/uwsgi.ini
 
 handle_static
 handle_migrations
