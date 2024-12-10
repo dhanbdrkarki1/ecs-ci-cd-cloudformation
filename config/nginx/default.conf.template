@@ -1,5 +1,5 @@
 upstream uwsgi_app {
-    server unix:/usr/src/app/uwsgi_app.sock;
+    server unix:/tmp/uwsgi_app.sock;
 }
 
 server {

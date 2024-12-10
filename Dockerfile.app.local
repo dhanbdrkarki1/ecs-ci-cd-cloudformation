@@ -76,4 +76,4 @@ ENTRYPOINT ["./entrypoint.sh"]
 
 # uWSGI Server
 # (Optional) Comment below line while using docker compose.
-# CMD ["uwsgi", "--ini", "/usr/src/app/config/uwsgi/uwsgi.ini"]
+CMD ["uwsgi", "--ini", "/usr/src/app/config/uwsgi/uwsgi.ini"]

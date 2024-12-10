@@ -27,12 +27,6 @@ log_debug "Django version:"
 python3 -m django --version
 log_debug "Using settings module: ${DJANGO_SETTINGS_MODULE}"
 
-log_debug "Database connection details:"
-log_debug "DB_HOST: ${DB_HOST}"
-log_debug "DB_PORT: ${DB_PORT}"
-log_debug "DB_NAME: ${DB_NAME}"
-log_debug "DB_USER: ${DB_USER}"
-
 # checking Health of dependent services
 check_database_connection() {
     if [ -z "$DB_ENGINE" ]; then
@@ -165,8 +159,6 @@ print(User.objects.filter(username='${DJANGO_SUPERUSER_USERNAME}').exists())
         log_warn "Superuser environment variables not set"
     fi
 }
-
-cat config/uwsgi/uwsgi.ini
 
 handle_static
 handle_migrations

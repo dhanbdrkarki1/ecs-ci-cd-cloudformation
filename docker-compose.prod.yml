@@ -14,18 +14,15 @@ services:
   blog-web:
     build: 
       context: .
-      dockerfile: ./Dockerfile.app.local
+      dockerfile: ./Dockerfile.app
     restart: always
-    volumes: 
-      - .:/usr/src/app
-      - uwsgi-socket:/tmp
     ports:
       - 8000:8000
     environment:
       # Django Settings Module
       - DJANGO_SETTINGS_MODULE=blogsite.settings.local
       # Debug Mode
-      - DEBUG_STATUS=True 
+      - DEBUG_STATUS=False 
       # Django Secret Key
       - DJANGO_SECRET_KEY="dhanbdrkarki-is-deploying-django-haha6u"
       # Allowed Hosts
@@ -47,19 +44,20 @@ services:
       - EMAIL_USE_TLS=True
       - EMAIL_HOST_USER=your_email@gmail.com
       - EMAIL_HOST_PASSWORD=your_app_specific_password
+      # Amazon S3
+      - AWS_ACCESS_KEY_ID="<your_aws_access_key>"
+      - AWS_SECRET_ACCESS_KEY="<your_aws_secret_access_key>"
+      - AWS_STORAGE_BUCKET_NAME="<unique_s3_bucket_name>"  
+      - AWS_S3_REGION_NAME="<your_aws_region>"
     depends_on:
       - db
     networks:
       - blog-network
-
   nginx:
     build: 
       context: .
       dockerfile: ./Dockerfile.nginx
     restart: always
-    volumes:
-      - .:/usr/src/app
-      - uwsgi-socket:/tmp
     ports:
       - 80:80
       - 443:443
@@ -67,8 +65,6 @@ services:
       - blog-web
     networks:
       - blog-network
-volumes:
-  uwsgi-socket:
 
 networks:
   blog-network:
