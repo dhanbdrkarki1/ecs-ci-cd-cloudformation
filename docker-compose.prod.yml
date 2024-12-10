@@ -14,13 +14,16 @@ services:
   blog-web:
     build: 
       context: .
-      dockerfile: ./Dockerfile.app
+      dockerfile: ./Dockerfile.app.prod
     restart: always
+    volumes: 
+      - .:/usr/src/app
+      - uwsgi-socket:/tmp
     ports:
       - 8000:8000
     environment:
       # Django Settings Module
-      - DJANGO_SETTINGS_MODULE=blogsite.settings.local
+      - DJANGO_SETTINGS_MODULE=blogsite.settings.prod
       # Debug Mode
       - DEBUG_STATUS=False 
       # Django Secret Key
@@ -53,18 +56,24 @@ services:
       - db
     networks:
       - blog-network
+
   nginx:
     build: 
       context: .
       dockerfile: ./Dockerfile.nginx
     restart: always
+    volumes:
+      - .:/usr/src/app
+      - uwsgi-socket:/tmp
     ports:
       - 80:80
-      - 443:443
     depends_on:
       - blog-web
     networks:
       - blog-network
+      
+volumes:
+  uwsgi-socket:
 
 networks:
   blog-network:
