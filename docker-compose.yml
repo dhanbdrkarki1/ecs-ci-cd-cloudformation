@@ -58,6 +58,19 @@ services:
       - db
     networks:
       - blog-network
+  nginx:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./config/nginx:/etc/nginx/templates
+      - .:/usr/src/app
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - blog-web
+    networks:
+      - blog-network
 
 networks:
   blog-network:
