@@ -313,8 +313,10 @@ Resources:
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: !Ref ContainerPort
-          ToPort: !Ref ContainerPort
+          # FromPort: !Ref ContainerPort
+          # ToPort: !Ref ContainerPort
+          FromPort: 80
+          ToPort: 80
           SourceSecurityGroupId: !Ref ALBSecurityGroup
           Description: Allow ecs task access from load balancer
       # SecurityGroupEgress:
