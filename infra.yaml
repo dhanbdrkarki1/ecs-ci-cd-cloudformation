@@ -682,6 +682,11 @@ Resources:
         - FARGATE
       Cpu: '512'
       Memory: '1024'
+      EphemeralStorage: 
+        SizeInGiB: 20
+      Volumes:
+        - Name: shared-storage
+        - Name: nginx-conf
       ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn # Role used by ECS infrastructure
       TaskRoleArn: !GetAtt ECSApplicationTaskRole.Arn # Role used by your application
 
@@ -690,15 +695,13 @@ Resources:
         - Name: !Sub ${ProjectName}-web
           Essential: true
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-repository:latest
-          EntryPoint:
-            - "./entrypoint.sh"
-          Command: 
-            - "uwsgi"
-            - "--ini"
-            - "/usr/src/app/config/uwsgi/uwsgi.ini"
           PortMappings:
             - ContainerPort: !Ref ContainerPort
               Protocol: tcp
+          MountPoints:
+            - SourceVolume: shared-storage
+              ContainerPath: /usr/src/app
+              ReadOnly: false
           # HealthCheck:
           #   Command:
           #     - CMD-SHELL
@@ -768,9 +771,13 @@ Resources:
           PortMappings:
             - ContainerPort: 80
               Protocol: tcp
-          VolumesFrom:
-            - SourceContainer: !Sub ${ProjectName}-web
-              ReadOnly: true
+          MountPoints:
+            - SourceVolume: shared-storage
+              ContainerPath: /usr/src/app
+              ReadOnly: false
+            - SourceVolume: nginx-conf
+              ContainerPath: /etc/nginx/conf.d
+              ReadOnly: false
           Environment:
             - Name: NGINX_CONF
               Value: !Sub |
@@ -836,8 +843,8 @@ Resources:
             - !Ref ECSSecurityGroup
           AssignPublicIp: DISABLED
       LoadBalancers:
-        - ContainerName: !Ref ProjectName
-          ContainerPort: !Ref ContainerPort
+        - ContainerName: !Sub ${ProjectName}-nginx  # Must match the container name in task definition
+          ContainerPort: 80
           TargetGroupArn: !Ref ALBTargetGroup
       HealthCheckGracePeriodSeconds: 60  # Gives containers time to warm up
       DeploymentConfiguration:
