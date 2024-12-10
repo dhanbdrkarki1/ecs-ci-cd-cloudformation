@@ -33,6 +33,27 @@ The solution includes:
 ├── index.js # Sample application code
 └── .gitignore # Git ignore file
 
+## Local Development Setup
+1. Update environment variable inside docker-compose.yml file as per your need.
+
+2. To run application,
+    ```bash
+    docker compose up --build
+    ```
+### With Amazon S3 as static file storage (Optional)
+1. Update environment variable inside docker-compose.prod.yml file as per your need for Amazon S3 setting. (Note: Make sure created S3 bucket is public.)
+    ```
+    # Amazon S3
+    AWS_ACCESS_KEY_ID="<your_aws_access_key>"
+    AWS_SECRET_ACCESS_KEY="<your_aws_secret_access_key>"
+    AWS_STORAGE_BUCKET_NAME="<unique_s3_bucket_name>"  
+    AWS_S3_REGION_NAME="<your_aws_region>"
+    ```
+
+2. Run the application using:
+    ```bash
+    docker compose up -f docker-compose.prod.yml --build
+    ```
 
 ## Deployment Steps
 
