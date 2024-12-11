@@ -674,6 +674,8 @@ Resources:
               # Project
             - Name: PROJECT_NAME
               Value: !Ref ProjectName
+            - Name: NGINX_PORT
+              Value: !Ref NginxPort
           HealthCheck:
             Command:
               - CMD-SHELL

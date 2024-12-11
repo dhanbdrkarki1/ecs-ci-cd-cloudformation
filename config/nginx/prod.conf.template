@@ -3,7 +3,7 @@ upstream uwsgi_app {
 }
 
 server {
-    listen 80;
+    listen ${NGINX_PORT};
     server_name _;
     client_max_body_size 100M;
     
