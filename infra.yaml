@@ -667,6 +667,13 @@ Resources:
           PortMappings:
             - ContainerPort: !Ref NginxPort
               Protocol: tcp
+          Cpu: 512
+          Memory: 1024
+          MemoryReservation: 512
+          Environment:
+              # Project
+            - Name: PROJECT_NAME
+              Value: !Ref ProjectName
           HealthCheck:
             Command:
               - CMD-SHELL

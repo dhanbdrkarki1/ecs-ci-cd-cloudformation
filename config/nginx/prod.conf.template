@@ -1,5 +1,5 @@
 upstream uwsgi_app {
-    server ${ProjectName}-app:8000;  # Communicate with the uWSGI container via its name ("app" matches the container name in ECS).
+    server ${PROJECT_NAME}-app:8000;  # Communicate with the uWSGI container via its name ("app" matches the container name in ECS).
 }
 
 server {
