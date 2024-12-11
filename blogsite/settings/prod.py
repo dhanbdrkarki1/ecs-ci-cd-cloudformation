@@ -1,15 +1,15 @@
 from .base import *
+from socket import gethostbyname
+from socket import gethostname
 
 DEBUG = os.environ.get("DEBUG_STATUS")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
-# Parse the ALLOWED_HOSTS from the environment variable
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOST").split(",")
+ALLOWED_HOSTS.append(gethostbyname(gethostname()))
 
-# Ensure the list is clean (e.g., no empty strings)
-ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS if host.strip()]
-
+TIME_ZONE = 'Asia/Kathmandu'
 
 # Application definition
 
