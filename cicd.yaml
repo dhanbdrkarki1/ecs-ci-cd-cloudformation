@@ -42,10 +42,6 @@ Parameters:
     Type: String
     Description: ARN of the CodeStar connection
 
-  EcsContainerName:
-    Type: String
-    Description: Name of the ECS container
-
   ApproverEmail:
     Type: String
     Description: Email address to receive approval notifications
