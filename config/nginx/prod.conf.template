@@ -1,5 +1,5 @@
 upstream uwsgi_app {
-    server ${PROJECT_NAME}-app:8000;  # Communicate with the uWSGI container via its name ("app" matches the container name in ECS).
+    server localhost:8000;  # Use localhost since the containers are in the same ECS task.
 }
 
 server {
