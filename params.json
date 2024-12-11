@@ -8,7 +8,7 @@
         "ParameterValue": "ecs-demo-app"
     },
     {
-        "ParameterKey": "ContainerPort",
+        "ParameterKey": "AppPort",
         "ParameterValue": "3000"
     }
 ]

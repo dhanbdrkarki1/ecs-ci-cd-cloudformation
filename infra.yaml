@@ -13,7 +13,7 @@ Parameters:
     Default: dev
 
   # ECS Params
-  ContainerPort:
+  AppPort:
     Type: Number
     Description: Container port
 
@@ -313,8 +313,8 @@ Resources:
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          # FromPort: !Ref ContainerPort
-          # ToPort: !Ref ContainerPort
+          # FromPort: !Ref AppPort
+          # ToPort: !Ref AppPort
           FromPort: 80
           ToPort: 80
           SourceSecurityGroupId: !Ref ALBSecurityGroup
@@ -353,13 +353,13 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       VpcId: !Ref VPC
-      # Port: !Ref ContainerPort
+      # Port: !Ref AppPort
       Port: 80
       Protocol: HTTP
       TargetType: ip
       HealthCheckEnabled: true
       HealthCheckProtocol: HTTP
-      HealthCheckPort: !Ref ContainerPort
+      HealthCheckPort: !Ref AppPort
       HealthCheckPath: /health/
       HealthCheckIntervalSeconds: 180
       HealthCheckTimeoutSeconds: 5
@@ -606,11 +606,11 @@ Resources:
   #         Essential: true
   #         Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-app:latest
   #         PortMappings:
-  #           - ContainerPort: !Ref ContainerPort
+  #           - AppPort: !Ref AppPort
   #         HealthCheck:
   #           Command:
   #             - CMD-SHELL
-  #             - !Sub "curl -f http://localhost:${ContainerPort}/health/ || exit 1"
+  #             - !Sub "curl -f http://localhost:${AppPort}/health/ || exit 1"
   #           Interval: 60    # Check every 60 seconds
   #           Timeout: 5      # Wait up to 5 seconds for a response
   #           Retries: 3      # Allow 3 retries before marking unhealthy
@@ -691,12 +691,12 @@ Resources:
           Essential: true
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-app:latest
           PortMappings:
-            - ContainerPort: !Ref ContainerPort
+            - AppPort: !Ref AppPort
               Protocol: tcp
           # HealthCheck:
           #   Command:
           #     - CMD-SHELL
-          #     - !Sub "curl -f http://localhost:${ContainerPort}/health/ || exit 1"
+          #     - !Sub "curl -f http://localhost:${AppPort}/health/ || exit 1"
           #   Interval: 60    # Check every 60 seconds
           #   Timeout: 5      # Wait up to 5 seconds for a response
           #   Retries: 3      # Allow 3 retries before marking unhealthy
@@ -760,7 +760,7 @@ Resources:
           Essential: true
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-nginx:latest
           PortMappings:
-            - ContainerPort: 80
+            - AppPort: 80
               Protocol: tcp
           DependsOn:
             - ContainerName: !Sub ${ProjectName}-app
@@ -800,7 +800,7 @@ Resources:
           AssignPublicIp: DISABLED
       LoadBalancers:
         - ContainerName: !Sub ${ProjectName}-nginx  # Must match the container name in task definition
-          ContainerPort: 80
+          AppPort: 80
           TargetGroupArn: !Ref ALBTargetGroup
       HealthCheckGracePeriodSeconds: 60  # Gives containers time to warm up
       DeploymentConfiguration:

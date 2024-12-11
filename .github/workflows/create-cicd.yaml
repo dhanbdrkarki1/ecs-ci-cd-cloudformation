@@ -14,8 +14,10 @@ jobs:
       ENVIRONMENT: prod
       PROJECT_NAME: dbk-blog
       ECS_CONTAINER_NAME: dbk-blog
-      DOCKER_FILE_PATH: ./Dockerfile.prod
-      CONTAINER_PORT: 8000
+      APP_DOCKER_FILE_PATH: ./Dockerfile.app.prod
+      NGINX_DOCKER_FILE_PATH: ./Dockerfile.nginx.prod
+      APP_PORT: 8000
+      NGINX_PORT: 80
       CLOUDFORMATION_CICD_TEMPLATE_FILE: cicd.yaml
       PipelineApproverEmail: dhanbdrkarki1111@gmail.com  
 
@@ -128,8 +130,9 @@ jobs:
               GitHubBranch=${{ github.ref_name }} \
               CodeStarConnectionArn=${{ secrets.CODESTAR_CONNECTION_ARN }} \
               EcsContainerName=$ECS_CONTAINER_NAME \
-              DockerFilePath=$DOCKER_FILE_PATH \
-              ContainerPort=$CONTAINER_PORT \
+              DockerFilePath=$APP_DOCKER_FILE_PATH \
+              AppPort=$APP_PORT \
+              NginxPort=$NGINX_PORT \
               ApproverEmail=$PipelineApproverEmail
       
       # Verify CloudFormation Stack Success

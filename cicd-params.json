@@ -28,7 +28,7 @@
         "ParameterValue": "./Dockerfile"
     },
     {
-        "ParameterKey": "ContainerPort",
+        "ParameterKey": "AppPort",
         "ParameterValue": "3000"
     }
 ]
