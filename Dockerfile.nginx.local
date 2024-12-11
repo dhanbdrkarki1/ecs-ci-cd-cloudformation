@@ -2,9 +2,9 @@
 FROM nginx:1.27.3-alpine
 
 # Copy your NGINX template configuration to the appropriate directory
-COPY ./config/nginx/default.conf.template /etc/nginx/templates/default.conf.template
+COPY ./config/nginx/dev.conf.template /etc/nginx/templates/default.conf.template
 
-# Expose ports (optional if using docker-compose for port mapping)
+# Expose ports
 EXPOSE 80
 
 # Start NGINX

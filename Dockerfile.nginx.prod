@@ -1,0 +1,14 @@
+# Use the official NGINX image as the base
+FROM nginx:1.27.3-alpine
+
+# Install gettext for envsubst
+RUN apk add --no-cache gettext
+
+# Copy your NGINX template configuration to the appropriate directory
+COPY ./config/nginx/prod.conf.template /etc/nginx/templates/default.conf.template
+
+# Expose ports
+EXPOSE 80
+
+# Start NGINX with environment variable substitution
+CMD ["/bin/sh", "-c", "envsubst < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

@@ -55,7 +55,7 @@ services:
   nginx:
     build: 
       context: .
-      dockerfile: ./Dockerfile.nginx
+      dockerfile: ./Dockerfile.nginx.local
     restart: always
     volumes:
       - .:/usr/src/app
