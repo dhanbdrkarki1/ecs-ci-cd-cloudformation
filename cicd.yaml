@@ -218,10 +218,12 @@ Resources:
             Value: !Ref AWS::Region
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
-          - Name: DOCKERFILE_PATH
+          - Name: PROJECT_NAME
+            Value: !Ref ProjectName
+          - Name: APP_DOCKERFILE_PATH
             Value: !Ref AppDockerFilePath
-          - Name: CONTAINER_NAME
-            Value: !Ref EcsContainerName
+          - Name: NGINX_DOCKER_FILE_PATH
+            Value: !Ref NginxDockerFilePath
       Source:
         Type: CODEPIPELINE
         BuildSpec: buildspec.yml

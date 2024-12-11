@@ -13,17 +13,35 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - echo Building the Docker image...
-      - docker build -t $REPOSITORY_URI:latest -f $DOCKERFILE_PATH .
-      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+
+      # Build application image
+      - echo Building the Application Docker image...
+      - docker build -t $REPOSITORY_URI/app:latest -f $APP_DOCKERFILE_PATH .
+      - docker tag $REPOSITORY_URI/app:latest $REPOSITORY_URI/app:$IMAGE_TAG
+      
+      # Build nginx image
+      - echo Building the Nginx Docker image...
+      - docker build -t $REPOSITORY_URI/nginx:latest -f $NGINX_DOCKERFILE_PATH .
+      - docker tag $REPOSITORY_URI/nginx:latest $REPOSITORY_URI/nginx:$IMAGE_TAG
       
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Pushing the Docker image...
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI/app:$IMAGE_TAG
+      - docker push $REPOSITORY_URI/nginx:$IMAGE_TAG
       - echo Writing image definitions file...
-      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - |
+        printf '[
+          {
+            "name":"%s",
+            "imageUri":"%s"
+          },
+          {
+            "name":"%s",
+            "imageUri":"%s"
+          }
+        ]' $PROJECT_NAME-app $REPOSITORY_URI/app:$IMAGE_TAG $PROJECT_NAME-nginx $REPOSITORY_URI/nginx:$IMAGE_TAG > imagedefinitions.json
       - cat imagedefinitions.json
 
 artifacts:
