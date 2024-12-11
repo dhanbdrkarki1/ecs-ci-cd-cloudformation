@@ -12,12 +12,12 @@ jobs:
     env:
       # GitHub variables that will be used in the workflow
       ENVIRONMENT: prod
-      PROJECT_NAME: ecs-app
-      ECS_CONTAINER_NAME: ecs-app
+      PROJECT_NAME: dbk-blog
+      ECS_CONTAINER_NAME: dbk-blog
       DOCKER_FILE_PATH: ./Dockerfile.prod
       CONTAINER_PORT: 8000
       CLOUDFORMATION_CICD_TEMPLATE_FILE: cicd.yaml
-      PipelineApproverEmail: dhanbdrkarki111@gmail.com  
+      PipelineApproverEmail: dhanbdrkarki1111@gmail.com  
 
     steps:
       # Checkout code from the repository
