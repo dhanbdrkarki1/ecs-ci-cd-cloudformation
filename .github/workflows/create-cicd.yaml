@@ -130,7 +130,8 @@ jobs:
               GitHubBranch=${{ github.ref_name }} \
               CodeStarConnectionArn=${{ secrets.CODESTAR_CONNECTION_ARN }} \
               EcsContainerName=$ECS_CONTAINER_NAME \
-              DockerFilePath=$APP_DOCKER_FILE_PATH \
+              AppDockerFilePath=$APP_DOCKER_FILE_PATH \
+              NginxDockerFilePath=$NGINX_DOCKER_FILE_PATH \
               AppPort=$APP_PORT \
               NginxPort=$NGINX_PORT \
               ApproverEmail=$PipelineApproverEmail

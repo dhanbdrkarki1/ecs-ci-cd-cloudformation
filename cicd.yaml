@@ -11,14 +11,24 @@ Parameters:
     Type: String
     Description: Name of the project
 
-  DockerFilePath:
-    Description: Path to the Dockerfile in the code repo.
+  AppDockerFilePath:
+    Description: Path to the Dockerfile for the application in the code repo.
     Type: String
-    Default: ./Dockerfile
+    Default: ./Dockerfile.app.prod
+
+  NginxDockerFilePath:
+    Description: Path to the Dockerfile for the nginx web server in the code repo.
+    Type: String
+    Default: ./Dockerfile.nginx.prod
+
 
   AppPort:
     Type: Number
     Description: Container port for the application
+
+  NginxPort:
+    Type: Number
+    Description: Container port for the nginx server.
 
   GitHubRepoId:
     Type: String
@@ -78,10 +88,11 @@ Parameters:
 
 
 Resources:
-  ECRRepository:
+  # ECR repository for application
+  AppECRRepository:
     Type: AWS::ECR::Repository
     Properties:
-      RepositoryName: !Sub "${ProjectName}-repository"
+      RepositoryName: !Sub "${ProjectName}-app"
       ImageScanningConfiguration:
         ScanOnPush: true
       EncryptionConfiguration:
@@ -92,6 +103,23 @@ Resources:
           Value: !Ref Environment
         - Key: Project
           Value: !Ref ProjectName
+  
+  # ECR repository for custom nginx
+  NginxECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub "${ProjectName}-nginx"
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      EncryptionConfiguration:
+        EncryptionType: AES256
+      ImageTagMutability: MUTABLE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Project
+          Value: !Ref ProjectName
+
 
   # SNS Topic and Subscription: for approving the deployment
   ApprovalTopic:
@@ -169,7 +197,9 @@ Resources:
   # Application Build Project
   AppBuildProject:
     Type: AWS::CodeBuild::Project
-    DependsOn: ECRRepository
+    DependsOn: 
+      - AppECRRepository
+      - NginxECRRepository
     Properties:
       Name: !Sub ${ProjectName}-build
       Description: Build project for container image
@@ -183,13 +213,13 @@ Resources:
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: REPOSITORY_URI
-            Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-repository"
+            Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-app"
           - Name: AWS_DEFAULT_REGION
             Value: !Ref AWS::Region
           - Name: AWS_ACCOUNT_ID
             Value: !Ref AWS::AccountId
           - Name: DOCKERFILE_PATH
-            Value: !Ref DockerFilePath
+            Value: !Ref AppDockerFilePath
           - Name: CONTAINER_NAME
             Value: !Ref EcsContainerName
       Source:
@@ -278,24 +308,6 @@ Resources:
                 Version: '1'
               Configuration:
                 ProjectName: !Ref InfraTemplateValidationProject
-                # EnvironmentVariables: !Sub |
-                #   [
-                #     {
-                #       "name": "Environment",
-                #       "value": "${Environment}",
-                #       "type": "PLAINTEXT"
-                #     },
-                #     {
-                #       "name": "ProjectName",
-                #       "value": "${ProjectName}",
-                #       "type": "PLAINTEXT"
-                #     },
-                #     {
-                #       "name": "AppPort",
-                #       "value": "${AppPort}",
-                #       "type": "PLAINTEXT"
-                #     }
-                #   ]
               InputArtifacts:
                 - Name: SourceOutput
               OutputArtifacts:

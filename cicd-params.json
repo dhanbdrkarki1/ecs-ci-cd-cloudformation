@@ -24,7 +24,7 @@
         "ParameterValue": "ecs-demo-app"
     },
     {
-        "ParameterKey": "DockerFilePath",
+        "ParameterKey": "AppDockerFilePath",
         "ParameterValue": "./Dockerfile"
     },
     {
