@@ -75,4 +75,4 @@ EXPOSE 8000
 ENTRYPOINT ["./entrypoint.sh"]
 
 # uWSGI Server
-CMD ["uwsgi", "--ini", "/usr/src/app/config/uwsgi/uwsgi.ini"]
+CMD ["uwsgi", "--ini", "/usr/src/app/config/uwsgi/prod.ini"]
