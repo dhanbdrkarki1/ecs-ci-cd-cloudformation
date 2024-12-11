@@ -15,7 +15,11 @@ Parameters:
   # ECS Params
   AppPort:
     Type: Number
-    Description: Container port
+    Description: Container port for application
+
+  NginxPort:
+    Type: Number
+    Description: Container port for nginx
 
   # VPC Params
   VPCBlock:
@@ -313,18 +317,10 @@ Resources:
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          # FromPort: !Ref AppPort
-          # ToPort: !Ref AppPort
-          FromPort: 80
-          ToPort: 80
+          FromPort: !Ref NginxPort
+          ToPort: !Ref NginxPort
           SourceSecurityGroupId: !Ref ALBSecurityGroup
           Description: Allow ecs task access from load balancer
-      # SecurityGroupEgress:
-      #   - IpProtocol: tcp
-      #     FromPort: 443
-      #     ToPort: 443
-      #     CidrIp: 0.0.0.0/0
-      #     Description: Allow HTTPS egress
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
@@ -353,8 +349,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       VpcId: !Ref VPC
-      # Port: !Ref AppPort
-      Port: 80
+      Port: !Ref NginxPort
       Protocol: HTTP
       TargetType: ip
       HealthCheckEnabled: true
@@ -521,7 +516,9 @@ Resources:
                   - ecr:BatchCheckLayerAvailability
                   - ecr:GetDownloadUrlForLayer
                   - ecr:BatchGetImage
-                Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-app
+                Resource: 
+                  - !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-app
+                  - !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-nginx
         - PolicyName: CloudWatchLogsAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -588,90 +585,6 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-app-role
 
-  # # ECS Task Definition and Service
-  # ECSTaskDefinition:
-  #   Type: AWS::ECS::TaskDefinition
-  #   Properties:
-  #     Family: !Sub ${ProjectName}
-  #     NetworkMode: awsvpc
-  #     RequiresCompatibilities:
-  #       - FARGATE
-  #     Cpu: '512'
-  #     Memory: '1024'
-  #     ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn # Role used by ECS infrastructure
-  #     TaskRoleArn: !GetAtt ECSApplicationTaskRole.Arn # Role used by your application
-
-  #     ContainerDefinitions:
-  #       - Name: !Sub ${ProjectName}
-  #         Essential: true
-  #         Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-app:latest
-  #         PortMappings:
-  #           - AppPort: !Ref AppPort
-  #         HealthCheck:
-  #           Command:
-  #             - CMD-SHELL
-  #             - !Sub "curl -f http://localhost:${AppPort}/health/ || exit 1"
-  #           Interval: 60    # Check every 60 seconds
-  #           Timeout: 5      # Wait up to 5 seconds for a response
-  #           Retries: 3      # Allow 3 retries before marking unhealthy
-  #           StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
-  #         Cpu: 512
-  #         Memory: 1024
-  #         MemoryReservation: 512
-
-  #         Environment:
-  #             # Project
-  #           - Name: ENVIRONMENT
-  #             Value: !Ref Environment
-  #           - Name: PROJECT_NAME
-  #             Value: !Ref ProjectName
-  #             # Amazon S3 (static files)
-  #           - Name: AWS_STORAGE_BUCKET_NAME
-  #             Value: !Ref StaticFilesBucket
-  #           - Name: AWS_S3_REGION_NAME
-  #             Value: !Ref AWS::Region
-  #             # Database
-  #           - Name: DB_HOST
-  #             Value: !GetAtt RDSInstance.Endpoint.Address
-  #           - Name: DB_PORT
-  #             Value: !GetAtt RDSInstance.Endpoint.Port
-  #         Secrets:
-  #           # Database credentials
-  #           - Name: DB_ENGINE
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/engine
-  #           - Name: DB_NAME
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/name
-  #           - Name: DB_USER
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/username
-  #           - Name: DB_PASSWORD
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/database/password
-  #           # Django settings
-  #           - Name: DJANGO_SETTINGS_MODULE
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/django_settings_module
-  #           - Name: DEBUG_STATUS
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/debug_status
-  #           - Name: DJANGO_SECRET_KEY
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/secret_key
-  #           - Name: ALLOWED_HOSTS
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/allowed_hosts
-  #           # Django superuser
-  #           - Name: DJANGO_SUPERUSER_USERNAME
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/superuser/username
-  #           - Name: DJANGO_SUPERUSER_PASSWORD
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/superuser/password
-  #           - Name: DJANGO_SUPERUSER_EMAIL
-  #             ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/superuser/email
-
-  #         LogConfiguration:
-  #           LogDriver: awslogs
-  #           Options:
-  #             awslogs-group: !Ref ECSCloudWatchLogGroup
-  #             awslogs-region: !Ref AWS::Region
-  #             awslogs-stream-prefix: ecs
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub ${ProjectName}-${Environment}-ecs-task
-
   # ECS Task Definition and Service
   ECSTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -680,8 +593,8 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: '512'
-      Memory: '1024'
+      Cpu: '1024'
+      Memory: '2048'
       ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn # Role used by ECS infrastructure
       TaskRoleArn: !GetAtt ECSApplicationTaskRole.Arn # Role used by your application
 
@@ -691,16 +604,8 @@ Resources:
           Essential: true
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-app:latest
           PortMappings:
-            - AppPort: !Ref AppPort
+            - ContainerPort: !Ref AppPort
               Protocol: tcp
-          # HealthCheck:
-          #   Command:
-          #     - CMD-SHELL
-          #     - !Sub "curl -f http://localhost:${AppPort}/health/ || exit 1"
-          #   Interval: 60    # Check every 60 seconds
-          #   Timeout: 5      # Wait up to 5 seconds for a response
-          #   Retries: 3      # Allow 3 retries before marking unhealthy
-          #   StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
           Cpu: 512
           Memory: 1024
           MemoryReservation: 512
@@ -760,8 +665,16 @@ Resources:
           Essential: true
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-nginx:latest
           PortMappings:
-            - AppPort: 80
+            - ContainerPort: !Ref NginxPort
               Protocol: tcp
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - !Sub "curl -f http://localhost:${NginxPort}/health/ || exit 1"
+            Interval: 60    # Check every 60 seconds
+            Timeout: 5      # Wait up to 5 seconds for a response
+            Retries: 3      # Allow 3 retries before marking unhealthy
+            StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
           DependsOn:
             - ContainerName: !Sub ${ProjectName}-app
               Condition: START
@@ -800,7 +713,7 @@ Resources:
           AssignPublicIp: DISABLED
       LoadBalancers:
         - ContainerName: !Sub ${ProjectName}-nginx  # Must match the container name in task definition
-          AppPort: 80
+          ContainerPort: !Ref NginxPort
           TargetGroupArn: !Ref ALBTargetGroup
       HealthCheckGracePeriodSeconds: 60  # Gives containers time to warm up
       DeploymentConfiguration:
@@ -911,6 +824,10 @@ Outputs:
     Description: The URL of the application load balancer
     Value: !GetAtt ALB.DNSName
 
+  PipelineURL:
+    Description: ECS Cluster URL
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/ecs/v2/clusters/${ProjectName}-${Environment}-cluster/services?region=${AWS::Region}
+
   ClusterName:
     Description: ECS Cluster Name
     Value: !Ref ECSCluster
@@ -918,7 +835,3 @@ Outputs:
   ServiceName:
     Description: ECS Service Name
     Value: !Ref ECSService
-
-  # RDSInstanceEndpoint:
-  #   Description: The endpoint address of the RDS instance
-  #   Value: !GetAtt RDSInstance.Endpoint.Address

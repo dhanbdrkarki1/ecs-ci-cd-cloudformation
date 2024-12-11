@@ -368,6 +368,7 @@ Resources:
                       "Environment": "${Environment}",
                       "ProjectName": "${ProjectName}",
                       "AppPort": "${AppPort}",
+                      "NginxPort": "${NginxPort}",
                       "VPCBlock": "${VPCBlock}",
                       "PublicSubnet1Block": "${PublicSubnet1Block}",
                       "PublicSubnet2Block": "${PublicSubnet2Block}",
