@@ -224,7 +224,7 @@ Resources:
             Value: !Sub ${ProjectName}-nginx
           - Name: APP_DOCKERFILE_PATH
             Value: !Ref AppDockerFilePath
-          - Name: NGINX_DOCKER_FILE_PATH
+          - Name: NGINX_DOCKERFILE_PATH
             Value: !Ref NginxDockerFilePath
       Source:
         Type: CODEPIPELINE
