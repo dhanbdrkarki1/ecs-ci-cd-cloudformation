@@ -1,5 +1,5 @@
 # Use the official NGINX image as the base
-FROM public.ecr.aws/docker/library/nginx:1.25.3-alpine
+FROM public.ecr.aws/nginx/nginx:alpine-slim
 
 # Install gettext for envsubst
 RUN apk add --no-cache gettext
