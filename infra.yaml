@@ -611,12 +611,6 @@ Resources:
           Memory: 1024
           MemoryReservation: 768
 
-          # Add ulimits to handle more connections
-          UlimitS:
-            - Name: nofile
-              SoftLimit: 65536
-              HardLimit: 65536
-
           Environment:
               # Project
             - Name: ENVIRONMENT
