@@ -354,7 +354,7 @@ Resources:
       TargetType: ip
       HealthCheckEnabled: true
       HealthCheckProtocol: HTTP
-      HealthCheckPort: !Ref AppPort
+      HealthCheckPort: !Ref NginxPort
       HealthCheckPath: /health/
       HealthCheckIntervalSeconds: 180
       HealthCheckTimeoutSeconds: 5
