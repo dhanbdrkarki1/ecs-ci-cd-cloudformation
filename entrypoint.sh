@@ -22,6 +22,16 @@ log_debug() {
     echo "[DEBUG] $1"
 }
 
+# Debug: Print current directory and list contents
+echo "Current directory: $(pwd)"
+ls -la
+
+# Ensure the directory exists
+if [ ! -d "/usr/src/app" ]; then
+    echo "Error: Directory /usr/src/app does not exist"
+    exit 1
+fi
+
 # Show Django version and settings
 log_debug "Django version:"
 python3 -m django --version

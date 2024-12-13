@@ -18,14 +18,13 @@ services:
     restart: always
     volumes: 
       - .:/usr/src/app
-      - uwsgi-socket:/tmp
     ports:
       - 8000:8000
     environment:
       # Django Settings Module
       - DJANGO_SETTINGS_MODULE=blogsite.settings.prod
       # Debug Mode
-      - DEBUG_STATUS=False 
+      - DEBUG_STATUS=True 
       # Django Secret Key
       - DJANGO_SECRET_KEY="dhanbdrkarki-is-deploying-django-haha6u"
       # Allowed Hosts
@@ -48,10 +47,10 @@ services:
       - EMAIL_HOST_USER=your_email@gmail.com
       - EMAIL_HOST_PASSWORD=your_app_specific_password
       # Amazon S3
-      - AWS_ACCESS_KEY_ID="<your_aws_access_key>"
-      - AWS_SECRET_ACCESS_KEY="<your_aws_secret_access_key>"
-      - AWS_STORAGE_BUCKET_NAME="<unique_s3_bucket_name>"  
-      - AWS_S3_REGION_NAME="<your_aws_region>"
+      - AWS_ACCESS_KEY_ID=AKIA35AJCH6XTDMHUHFI
+      - AWS_SECRET_ACCESS_KEY=3KX9sffQbHd1G9vLLlHmwMZsnSaACFYW0rICNuPt
+      - AWS_STORAGE_BUCKET_NAME=dbk-s3 
+      - AWS_S3_REGION_NAME=us-east-1
     depends_on:
       - db
     networks:
@@ -60,20 +59,16 @@ services:
   nginx:
     build: 
       context: .
-      dockerfile: ./Dockerfile.nginx.local
+      dockerfile: ./Dockerfile.nginx.prod
     restart: always
     volumes:
       - .:/usr/src/app
-      - uwsgi-socket:/tmp
     ports:
       - 80:80
     depends_on:
       - blog-web
     networks:
       - blog-network
-      
-volumes:
-  uwsgi-socket:
 
 networks:
   blog-network:
