@@ -62,7 +62,6 @@ services:
       - uwsgi-socket:/tmp
     ports:
       - 80:80
-      - 443:443
     depends_on:
       - blog-web
     networks:

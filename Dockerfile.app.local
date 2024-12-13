@@ -9,12 +9,6 @@ ENV PYTHONUNBUFFERED=1
 # Working directory
 WORKDIR /usr/src/app
 
-# Define build arguments for user and group names and IDs
-ARG USER_NAME=test
-ARG GROUP_NAME=test
-ARG USER_UID=1000
-ARG USER_GID=${USER_UID}
-
 # Install build dependencies
 RUN apk add --no-cache --virtual .build-deps \
     gcc musl-dev python3-dev \
@@ -27,12 +21,8 @@ RUN apk add --no-cache --virtual .build-deps \
     # Upgrade pip
     && python3 -m pip install --upgrade pip
 
-# Create a group and user with specified names and IDs
-RUN addgroup -g ${USER_GID} ${GROUP_NAME} && \
-    adduser -u ${USER_UID} -G ${GROUP_NAME} -S -h /home/${USER_NAME} ${USER_NAME}
-
 # Copy and install Python dependencies
-COPY --chown=${USER_NAME}:${GROUP_NAME} ./requirements.txt /usr/src/app/
+COPY ./requirements.txt /usr/src/app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime stage
@@ -76,4 +66,4 @@ ENTRYPOINT ["./entrypoint.sh"]
 
 # uWSGI Server
 # (Optional) Comment below line while using docker compose.
-CMD ["uwsgi", "--ini", "/usr/src/app/config/uwsgi/dev.ini"]
+CMD ["uwsgi", "--ini", "./config/uwsgi/dev.ini"]
