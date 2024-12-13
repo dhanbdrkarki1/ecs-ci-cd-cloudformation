@@ -18,6 +18,7 @@ services:
     restart: always
     volumes: 
       - .:/usr/src/app
+      - uwsgi-socket:/tmp
     ports:
       - 8000:8000
     environment:
@@ -63,12 +64,16 @@ services:
     restart: always
     volumes:
       - .:/usr/src/app
+      - uwsgi-socket:/tmp
     ports:
       - 80:80
     depends_on:
       - blog-web
     networks:
       - blog-network
+
+volumes:
+  uwsgi-socket:
 
 networks:
   blog-network:
