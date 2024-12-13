@@ -357,7 +357,7 @@ Resources:
       HealthCheckPort: !Ref NginxPort
       HealthCheckPath: /health/
       HealthCheckIntervalSeconds: 180
-      HealthCheckTimeoutSeconds: 5
+      HealthCheckTimeoutSeconds: 10
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 2
       Tags:
