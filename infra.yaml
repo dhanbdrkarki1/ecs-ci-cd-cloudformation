@@ -676,14 +676,14 @@ Resources:
               Value: !Ref ProjectName
             - Name: NGINX_PORT
               Value: !Ref NginxPort
-          HealthCheck:
-            Command:
-              - CMD-SHELL
-              - !Sub "curl -f http://localhost:${NginxPort}/health/ || exit 1"
-            Interval: 60    # Check every 60 seconds
-            Timeout: 5      # Wait up to 5 seconds for a response
-            Retries: 3      # Allow 3 retries before marking unhealthy
-            StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
+          # HealthCheck:
+          #   Command:
+          #     - CMD-SHELL
+          #     - !Sub "curl -f http://localhost:${NginxPort}/health/ || exit 1"
+          #   Interval: 60    # Check every 60 seconds
+          #   Timeout: 5      # Wait up to 5 seconds for a response
+          #   Retries: 3      # Allow 3 retries before marking unhealthy
+          #   StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
           DependsOn:
             - ContainerName: !Sub ${ProjectName}-app
               Condition: START

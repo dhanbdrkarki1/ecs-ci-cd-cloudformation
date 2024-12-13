@@ -6,8 +6,10 @@ DEBUG = os.environ.get("DEBUG_STATUS")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(",")
-ALLOWED_HOSTS.append(gethostbyname(gethostname()))
+# ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS").split(",")
+# ALLOWED_HOSTS.append(gethostbyname(gethostname()))
+
+ALLOWED_HOSTS = ["*"]
 
 TIME_ZONE = 'Asia/Kathmandu'
 
