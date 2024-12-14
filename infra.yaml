@@ -687,7 +687,7 @@ Resources:
           HealthCheck:
             Command:
               - CMD-SHELL
-              - !Sub "curl -f http://localhost:80/health/ || exit 1"
+              - !Sub "curl -f http://localhost:${NginxPort}/health/ || exit 1"
             Interval: 60    # Check every 60 seconds
             Timeout: 5      # Wait up to 5 seconds for a response
             Retries: 3      # Allow 3 retries before marking unhealthy
