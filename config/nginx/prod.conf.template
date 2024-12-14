@@ -25,9 +25,8 @@ server {
         proxy_send_timeout 300;
         
         # Increase buffer sizes to handle larger responses: 
-        proxy_buffer_size 128k;
-        proxy_buffers 8 16k;
-        proxy_busy_buffers_size 256k;
-
+        # proxy_buffer_size 128k;
+        # proxy_buffers 8 16k;
+        # proxy_busy_buffers_size 64k;
     }
 }

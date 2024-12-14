@@ -604,12 +604,18 @@ Resources:
           Essential: true
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-app:latest
           PortMappings:
-            - ContainerPort: !Ref AppPort
+            - ContainerPort: 8000
               Protocol: tcp
           # Increase resources for uWSGI
-          Cpu: 512
-          Memory: 1024
-          MemoryReservation: 768
+          Cpu: 1024
+          Memory: 2048
+          MemoryReservation: 1536
+          HealthCheck:
+            Command: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
+            Interval: 60
+            Timeout: 10
+            Retries: 5
+            StartPeriod: 60
 
           Environment:
               # Project
@@ -627,6 +633,8 @@ Resources:
               Value: !GetAtt RDSInstance.Endpoint.Address
             - Name: DB_PORT
               Value: !GetAtt RDSInstance.Endpoint.Port
+            - Name: DEBUG_STATUS
+              Value: True
           Secrets:
             # Database credentials
             - Name: DB_ENGINE
@@ -640,8 +648,8 @@ Resources:
             # Django settings
             - Name: DJANGO_SETTINGS_MODULE
               ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/django_settings_module
-            - Name: DEBUG_STATUS
-              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/debug_status
+            # - Name: DEBUG_STATUS
+            #   ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/debug_status
             - Name: DJANGO_SECRET_KEY
               ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/secret_key
             - Name: ALLOWED_HOSTS
@@ -666,22 +674,20 @@ Resources:
           Essential: true
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-nginx:latest
           PortMappings:
-            - ContainerPort: !Ref NginxPort
+            - ContainerPort: 80
               Protocol: tcp
-          # Adjust Nginx resources
-          Cpu: 256
-          Memory: 512
-          MemoryReservation: 256
+          Cpu: 512
+          Memory: 1024
+          MemoryReservation: 768
           Environment:
-              # Project
             - Name: PROJECT_NAME
               Value: !Ref ProjectName
             - Name: NGINX_PORT
-              Value: !Ref NginxPort
+              Value: "80"
           HealthCheck:
             Command:
               - CMD-SHELL
-              - !Sub "curl -f http://localhost:${NginxPort}/health/ || exit 1"
+              - !Sub "curl -f http://localhost:80/health/ || exit 1"
             Interval: 60    # Check every 60 seconds
             Timeout: 5      # Wait up to 5 seconds for a response
             Retries: 3      # Allow 3 retries before marking unhealthy
