@@ -604,7 +604,7 @@ Resources:
           Essential: true
           Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-app:latest
           PortMappings:
-            - ContainerPort: 8000
+            - ContainerPort: !Ref AppPort
               Protocol: tcp
           # Increase resources for uWSGI
           Cpu: 1024
