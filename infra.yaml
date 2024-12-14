@@ -607,9 +607,8 @@ Resources:
             - ContainerPort: !Ref AppPort
               Protocol: tcp
           # Increase resources for uWSGI
-          Cpu: 1024
-          Memory: 2048
-          MemoryReservation: 1536
+          Cpu: 768
+          Memory: 1536
           HealthCheck:
             Command: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
             Interval: 60
@@ -676,9 +675,8 @@ Resources:
           PortMappings:
             - ContainerPort: 80
               Protocol: tcp
-          Cpu: 512
-          Memory: 1024
-          MemoryReservation: 768
+          Cpu: 256
+          Memory: 512
           Environment:
             - Name: PROJECT_NAME
               Value: !Ref ProjectName
