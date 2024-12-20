@@ -12,7 +12,7 @@ server {
 
     location / {
         include /etc/nginx/uwsgi_params;
-        uwsgi_pass 0.0.0.0:8000;
+        uwsgi_pass uwsgi_app;
         
         # Pass headers to upstream
         proxy_set_header X-Real-IP $remote_addr;

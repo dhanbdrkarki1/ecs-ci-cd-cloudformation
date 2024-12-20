@@ -48,8 +48,8 @@ services:
       - EMAIL_HOST_USER=your_email@gmail.com
       - EMAIL_HOST_PASSWORD=your_app_specific_password
       # Amazon S3
-      - AWS_ACCESS_KEY_ID=AKIA35AJCH6XTDMHUHFI
-      - AWS_SECRET_ACCESS_KEY=3KX9sffQbHd1G9vLLlHmwMZsnSaACFYW0rICNuPt
+      - AWS_ACCESS_KEY_ID=
+      - AWS_SECRET_ACCESS_KEY=
       - AWS_STORAGE_BUCKET_NAME=dbk-s3 
       - AWS_S3_REGION_NAME=us-east-1
     depends_on:
