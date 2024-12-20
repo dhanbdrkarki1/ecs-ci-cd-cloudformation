@@ -60,8 +60,7 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-${Environment}-vpc"
-
+          Value: !Sub '${ProjectName}-${Environment}-vpc'
 
   # Internet Gateway
   InternetGateway:
@@ -69,7 +68,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-${Environment}-igw"
+          Value: !Sub '${ProjectName}-${Environment}-igw'
 
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -96,7 +95,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-${Environment}-rtb-public"
+          Value: !Sub '${ProjectName}-${Environment}-rtb-public'
 
   PublicRoute:
     Type: AWS::EC2::Route
@@ -145,7 +144,7 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnet1Block
       MapPublicIpOnLaunch: true
-      AvailabilityZone: !Select [0, !GetAZs ""]
+      AvailabilityZone: !Select [0, !GetAZs '']
       Tags:
         - Key: Name
           Value: !Sub "${ProjectName}-${Environment}-subnet-public1-${!Select [0, !GetAZs !Ref 'AWS::Region']}"
@@ -156,7 +155,7 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnet2Block
       MapPublicIpOnLaunch: true
-      AvailabilityZone: !Select [1, !GetAZs ""]
+      AvailabilityZone: !Select [1, !GetAZs '']
       Tags:
         - Key: Name
           Value: !Sub "${ProjectName}-${Environment}-subnet-public2-${!Select [1, !GetAZs !Ref 'AWS::Region']}"
@@ -166,7 +165,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnet1Block
-      AvailabilityZone: !Select [0, !GetAZs ""]
+      AvailabilityZone: !Select [0, !GetAZs '']
       Tags:
         - Key: Name
           Value: !Sub "${ProjectName}-${Environment}-subnet-private1-${!Select [0, !GetAZs !Ref 'AWS::Region']}"
@@ -176,29 +175,27 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnet2Block
-      AvailabilityZone: !Select [1, !GetAZs ""]
+      AvailabilityZone: !Select [1, !GetAZs '']
       Tags:
         - Key: Name
           Value: !Sub "${ProjectName}-${Environment}-subnet-private2-${!Select [1, !GetAZs !Ref 'AWS::Region']}"
-
 
   PrivateSubnet3:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnet3Block
-      AvailabilityZone: !Select [0, !GetAZs ""]
+      AvailabilityZone: !Select [0, !GetAZs '']
       Tags:
         - Key: Name
           Value: !Sub "${ProjectName}-${Environment}-subnet-private3-${!Select [0, !GetAZs !Ref 'AWS::Region']}"
-
 
   PrivateSubnet4:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnet4Block
-      AvailabilityZone: !Select [1, !GetAZs ""]
+      AvailabilityZone: !Select [1, !GetAZs '']
       Tags:
         - Key: Name
           Value: !Sub "${ProjectName}-${Environment}-subnet-private4-${!Select [1, !GetAZs !Ref 'AWS::Region']}"
@@ -257,7 +254,6 @@ Resources:
       SubnetId: !Ref PrivateSubnet4
       RouteTableId: !Ref PrivateRouteTable4
 
-
   #######################
   # Amazon S3
   #######################
@@ -275,7 +271,7 @@ Resources:
         CorsRules:
           - AllowedHeaders: ['*']
             AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
-            AllowedOrigins: ['*']  # In production, restrict to your domain
+            AllowedOrigins: ['*'] # In production, restrict to your domain
             MaxAge: 3000
 
   # Bucket Policy for Public Read Access
@@ -374,7 +370,6 @@ Resources:
       Port: 80
       Protocol: HTTP
 
-
   ##################################
   # Elastic Container Service
   ##################################
@@ -383,7 +378,7 @@ Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Sub "${ProjectName}-${Environment}-cluster"
+      ClusterName: !Sub '${ProjectName}-${Environment}-cluster'
       CapacityProviders:
         - FARGATE
         - FARGATE_SPOT
@@ -415,7 +410,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-vpc-endpoints-sg
-
 
   # For ECR Docker Registry
   ECRDkrVPCEndpoint:
@@ -516,7 +510,7 @@ Resources:
                   - ecr:BatchCheckLayerAvailability
                   - ecr:GetDownloadUrlForLayer
                   - ecr:BatchGetImage
-                Resource: 
+                Resource:
                   - !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-app
                   - !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ProjectName}-nginx
         - PolicyName: CloudWatchLogsAccess
@@ -559,7 +553,7 @@ Resources:
   ECSApplicationTaskRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${ProjectName}-${Environment}-ECSApplicationTaskRole"
+      RoleName: !Sub '${ProjectName}-${Environment}-ECSApplicationTaskRole'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -610,14 +604,15 @@ Resources:
           Cpu: 768
           Memory: 1536
           HealthCheck:
-            Command: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
+            Command:
+              ['CMD-SHELL', 'curl -f http://localhost:8000/health/ || exit 1']
             Interval: 60
-            Timeout: 10
-            Retries: 5
+            Timeout: 5
+            Retries: 3
             StartPeriod: 60
 
           Environment:
-              # Project
+            # Project
             - Name: ENVIRONMENT
               Value: !Ref Environment
             - Name: PROJECT_NAME
@@ -667,7 +662,7 @@ Resources:
               awslogs-group: !Ref ECSCloudWatchLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: !Sub ${ProjectName}/app
-          
+
         # Nginx Container
         - Name: !Sub ${ProjectName}-nginx
           Essential: true
@@ -681,14 +676,14 @@ Resources:
             - Name: PROJECT_NAME
               Value: !Ref ProjectName
             - Name: NGINX_PORT
-              Value: "80"
+              Value: '80'
           HealthCheck:
             Command:
               - CMD-SHELL
-              - !Sub "curl -f http://localhost:${NginxPort}/health/ || exit 1"
-            Interval: 60    # Check every 60 seconds
-            Timeout: 5      # Wait up to 5 seconds for a response
-            Retries: 3      # Allow 3 retries before marking unhealthy
+              - !Sub 'curl -f http://localhost:${NginxPort}/health/ || exit 1'
+            Interval: 60 # Check every 60 seconds
+            Timeout: 5 # Wait up to 5 seconds for a response
+            Retries: 2 # Allow 3 retries before marking unhealthy
             StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
           DependsOn:
             - ContainerName: !Sub ${ProjectName}-app
@@ -703,15 +698,14 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}-ecs-task
 
-
   # ECS Service
   ECSService:
     Type: AWS::ECS::Service
     DependsOn:
-    - ALBListener
-    - ECRDkrVPCEndpoint
-    - ECRApiVPCEndpoint
-    - S3GatewayEndpoint
+      - ALBListener
+      - ECRDkrVPCEndpoint
+      - ECRApiVPCEndpoint
+      - S3GatewayEndpoint
     Properties:
       ServiceName: !Sub ${ProjectName}-service
       Cluster: !Ref ECSCluster
@@ -727,20 +721,20 @@ Resources:
             - !Ref ECSSecurityGroup
           AssignPublicIp: DISABLED
       LoadBalancers:
-        - ContainerName: !Sub ${ProjectName}-nginx  # Must match the container name in task definition
+        - ContainerName: !Sub ${ProjectName}-nginx # Must match the container name in task definition
           ContainerPort: !Ref NginxPort
           TargetGroupArn: !Ref ALBTargetGroup
-      HealthCheckGracePeriodSeconds: 60  # Gives containers time to warm up
+      HealthCheckGracePeriodSeconds: 60 # Gives containers time to warm up
       DeploymentConfiguration:
         # run up to twice the desired number of tasks during the deployment process.
-        # prevent downtime, as ECS can start new tasks before stopping the old 
+        # prevent downtime, as ECS can start new tasks before stopping the old
         # allows up to double the desired count during deployment
         MaximumPercent: 200
         # ensures no tasks are stopped until new ones are healthy
         MinimumHealthyPercent: 100
         DeploymentCircuitBreaker:
           Enable: true # Enables the deployment circuit breaker feature, which monitors deployments for failures
-          Rollback: true # Automatically rolls back to the last stable deployment if the new deployment fails 
+          Rollback: true # Automatically rolls back to the last stable deployment if the new deployment fails
       # provides shell access to your running tasks
       # EnableExecuteCommand: true
       # # Automatically adds ECS-managed tags to the tasks created by this service
@@ -806,7 +800,7 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectName}-${Environment}
 
-# IAM Role for accessing Parameter Store
+  # IAM Role for accessing Parameter Store
   RDSParameterStoreRole:
     Type: AWS::IAM::Role
     Properties:

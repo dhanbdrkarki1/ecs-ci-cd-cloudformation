@@ -1,5 +1,5 @@
 upstream uwsgi_app {
-    server 0.0.0.0:8000;
+    server 127.0.0.1:8000;
 }
 
 server {
@@ -21,8 +21,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         
         # Timeout settings for uWSGI
-        proxy_read_timeout 300;
-        proxy_send_timeout 300;
+        uwsgi_read_timeout 300s;
+        uwsgi_send_timeout 300s;
         
         # Increase buffer sizes to handle larger responses: 
         # proxy_buffer_size 128k;
