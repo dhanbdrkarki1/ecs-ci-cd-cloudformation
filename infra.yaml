@@ -587,8 +587,8 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: '1024'
-      Memory: '2048'
+      Cpu: '4096'
+      Memory: '4096'
       ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn # Role used by ECS infrastructure
       TaskRoleArn: !GetAtt ECSApplicationTaskRole.Arn # Role used by your application
 
@@ -601,8 +601,8 @@ Resources:
             - ContainerPort: !Ref AppPort
               Protocol: tcp
           # Increase resources for uWSGI
-          Cpu: 768
-          Memory: 1536
+          Cpu: 3072
+          Memory: 3072
           # HealthCheck:
           #   Command:
           #     ['CMD-SHELL', 'curl -f http://localhost:8000/health/ || exit 1']
@@ -670,8 +670,8 @@ Resources:
           PortMappings:
             - ContainerPort: 80
               Protocol: tcp
-          Cpu: 256
-          Memory: 512
+          Cpu: 1024
+          Memory: 1024
           Environment:
             - Name: PROJECT_NAME
               Value: !Ref ProjectName
