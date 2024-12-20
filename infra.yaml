@@ -610,7 +610,17 @@ Resources:
           #   Timeout: 5
           #   Retries: 3
           #   StartPeriod: 60
-
+          # HealthCheck:
+          #   Command:
+          #     - CMD-SHELL
+          #     - python manage.py check --deploy || exit 1
+          #   Interval: 30
+          #   Timeout: 5
+          #   Retries: 3
+          #   StartPeriod: 60
+          DependsOn:
+            - ContainerName: !Sub ${ProjectName}-nginx
+              Condition: START
           Environment:
             # Project
             - Name: ENVIRONMENT
@@ -627,8 +637,6 @@ Resources:
               Value: !GetAtt RDSInstance.Endpoint.Address
             - Name: DB_PORT
               Value: !GetAtt RDSInstance.Endpoint.Port
-            - Name: DEBUG_STATUS
-              Value: True
           Secrets:
             # Database credentials
             - Name: DB_ENGINE
@@ -642,8 +650,8 @@ Resources:
             # Django settings
             - Name: DJANGO_SETTINGS_MODULE
               ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/django_settings_module
-            # - Name: DEBUG_STATUS
-            #   ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/debug_status
+            - Name: DEBUG_STATUS
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/debug_status
             - Name: DJANGO_SECRET_KEY
               ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/app/secret_key
             - Name: ALLOWED_HOSTS
@@ -685,9 +693,6 @@ Resources:
             Timeout: 5 # Wait up to 5 seconds for a response
             Retries: 2 # Allow 3 retries before marking unhealthy
             StartPeriod: 60 # Give the container 60 seconds to warm up before starting health checks
-          DependsOn:
-            - ContainerName: !Sub ${ProjectName}-app
-              Condition: START
           LogConfiguration:
             LogDriver: awslogs
             Options:

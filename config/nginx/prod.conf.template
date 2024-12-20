@@ -1,5 +1,6 @@
 upstream uwsgi_app {
-    server 127.0.0.1:8000;
+    server 127.0.0.1:8000; # using TCP socket
+    keepalive 32;
 }
 
 server {
@@ -11,20 +12,37 @@ server {
     error_log /var/log/nginx/error.log debug;
 
     location / {
-        include /etc/nginx/uwsgi_params;
         uwsgi_pass uwsgi_app;
+        include /etc/nginx/uwsgi_params;
         
-        # Pass headers to upstream
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Host $http_host;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        # Timeouts
+        uwsgi_read_timeout 60s;
+        uwsgi_send_timeout 60s;
+        uwsgi_connect_timeout 60s;
         
-        # Timeout settings for uWSGI
-        uwsgi_read_timeout 300s;
-        uwsgi_send_timeout 300s;
+        # Buffer sizes
+        uwsgi_buffer_size 128k;
+        uwsgi_buffers 8 16k;
+        uwsgi_busy_buffers_size 64k;
         
-        # Increase buffer sizes to handle larger responses: 
+        # Headers
+        uwsgi_param Host $host;
+        uwsgi_param X-Real-IP $remote_addr;
+        uwsgi_param X-Forwarded-For $proxy_add_x_forwarded_for;
+        uwsgi_param X-Forwarded-Proto $scheme;
+
+        ## Pass headers to upstream
+        # proxy_set_header X-Real-IP $remote_addr;
+        # proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # proxy_set_header Host $http_host;
+        # proxy_set_header X-Forwarded-Proto $scheme;
+        
+
+        ## Timeout settings for uWSGI
+        # uwsgi_read_timeout 300s;
+        # uwsgi_send_timeout 300s;
+        
+        ## Increase buffer sizes to handle larger responses: 
         # proxy_buffer_size 128k;
         # proxy_buffers 8 16k;
         # proxy_busy_buffers_size 64k;
