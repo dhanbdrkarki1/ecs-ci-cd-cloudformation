@@ -1,6 +1,6 @@
 # ECS CI/CD Pipeline with CloudFormation
 
-This project sets up a complete CI/CD pipeline for deploying applications to Amazon ECS using AWS CloudFormation. The pipeline uses CodePipeline, CodeBuild, and ECR to build and deploy Docker containers.
+This project sets up a complete CI/CD pipeline for deploying application to Amazon ECS using AWS CloudFormation. The pipeline uses CodePipeline, CodeBuild, and ECR to build and deploy Docker containers.
 
 ## Architecture
 
